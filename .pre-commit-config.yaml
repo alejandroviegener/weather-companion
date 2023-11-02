@@ -1,0 +1,18 @@
+# precommit hooks that run on every commit
+# black and isort are used to format the code
+# To format the code if an error, run:
+# black .
+# isort --profile black .
+
+repos:
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.10.1 
+    hooks:
+    - id: isort
+      args: ['--check-only', '--profile', 'black']
+
+  - repo: https://github.com/psf/black
+    rev: 23.9.1  
+    hooks:
+    - id: black
+      args: ['--check']

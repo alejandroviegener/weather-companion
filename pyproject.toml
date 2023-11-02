@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "weather-companion"
+version = "0.1.0"
+description = "Api that serves as a weather related info companion for your trips and day to day life"
+authors = ["Alejandro Viegener <alejandro.viegener@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.3"
+isort = "5.10.1"
+black = "23.9.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
