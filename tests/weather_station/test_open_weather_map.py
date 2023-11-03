@@ -1,7 +1,7 @@
 import pytest
 
 from weather_companion.weather_station import (
-    APIError,
+    ClientError,
     Location,
     OpenWeatherMapClient,
     OWMWeatherStation,
@@ -119,7 +119,7 @@ def test_should_fail_if_error_raised_by_client():
     client = OpenWeatherMapClientMock()
     weather_station = OWMWeatherStation(client=client)
 
-    client.set_current_state_response(None, APIError("some error message"))
+    client.set_current_state_response(None, ClientError("some error message"))
     location = Location(51.5074, 0.1278, "London")
     with pytest.raises(WeatherStationError) as e:
         weather_station.get_current_state(location)

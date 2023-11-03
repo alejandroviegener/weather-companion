@@ -5,7 +5,7 @@ import requests
 from .base import Location, WeatherStationError
 
 
-class APIError(Exception):
+class ClientError(Exception):
     pass
 
 
@@ -26,11 +26,11 @@ class OpenWeatherMapClient:
                 )
             )
             if response.status_code != 200:
-                raise APIError(
+                raise ClientError(
                     f"OpenWeatherMap API returned an error - {response.status_code}-{response.text}"
                 )
         except Exception as ex:
-            raise APIError(f"OpenWeatherMap API error - {ex}")
+            raise ClientError(f"OpenWeatherMap API error - {ex}")
 
         return response.json()
 
@@ -52,7 +52,7 @@ class OWMWeatherStation:
         """
         try:
             weather_data = self._client.get_current_state(location)
-        except APIError as ex:
+        except ClientError as ex:
             raise WeatherStationError(f"Client error: {ex}")
 
         # Get mandatory and optional data
