@@ -1,4 +1,5 @@
-from typing import Dict, List
+from datetime import date, datetime, timedelta, timezone
+from typing import Dict, List, Tuple
 
 import requests
 
@@ -12,7 +13,7 @@ class ClientError(Exception):
 class OpenWeatherMapClient:
     def __init__(self, api_key: str):
         self._api_key = api_key
-        self._base_url = "https://api.openweathermap.org/data/2.5/weather"
+        self._base_url = "https://api.openweathermap.org/data/2.5"
 
     def get_current_state(self, location: Location) -> dict:
         """
@@ -21,10 +22,27 @@ class OpenWeatherMapClient:
         try:
             response = requests.get(
                 self._base_url
-                + "?lat={}&lon={}&appid={}".format(
-                    location.latitude, location.longitude, self._api_key
-                )
+                + f"/weather?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
             )
+            if response.status_code != 200:
+                raise ClientError(
+                    f"OpenWeatherMap API returned an error - {response.status_code}-{response.text}"
+                )
+        except Exception as ex:
+            raise ClientError(f"OpenWeatherMap API error - {ex}")
+
+        return response.json()
+
+    def get_forecast(self, location: Location) -> dict:
+        """
+        Gets the weather forecast for a location, given a start and end date.
+        """
+        try:
+            response = requests.get(
+                self._base_url
+                + f"/forecast?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
+            )
+
             if response.status_code != 200:
                 raise ClientError(
                     f"OpenWeatherMap API returned an error - {response.status_code}-{response.text}"
@@ -56,15 +74,62 @@ class OWMWeatherStation:
             raise WeatherStationError(f"Client error: {ex}")
 
         # Get mandatory and optional data
-        mandatory_data = self._get_mandatory_data(weather_data)
-        optional_data = self._get_optional_data(weather_data)
+        mandatory_weather_data = self._get_mandatory_weather_data(weather_data)
+        optional_weather_data = self._get_optional_weather_data(weather_data)
 
-        result = {}
-        result.update(mandatory_data)
-        result.update(optional_data)
-        return result
+        weather_data = {}
+        weather_data.update(mandatory_weather_data)
+        weather_data.update(optional_weather_data)
+        return {"weather_data": weather_data}
 
-    def _get_mandatory_data(self, source: Dict) -> Dict:
+    def get_forecast(
+        self, location: Location, start_date: date, end_date: date
+    ) -> List[Tuple[datetime, str]]:
+        """
+        Gets the weather forecast for a given latitude and longitude for a given date and time.
+        """
+        try:
+            forecast_data = self._client.get_forecast(location)
+        except ClientError as ex:
+            raise WeatherStationError(f"Client error: {ex}")
+
+        if not forecast_data.get("list", None):
+            raise WeatherStationError(
+                "Unexpected weather data format: missing forecasts list"
+            )
+
+        # Get mandatory and optional data for each forecast instance and add it to the result
+        forecast_list = []
+        for forecast in forecast_data["list"]:
+            in_date_range = start_date <= date.fromtimestamp(forecast["dt"]) <= end_date
+            if not in_date_range:
+                continue
+
+            weather_data = {}
+            mandatory_weather_data = self._get_mandatory_weather_data(forecast)
+            optional_weather_data = self._get_optional_weather_data(forecast)
+
+            weather_data.update(mandatory_weather_data)
+            weather_data.update(optional_weather_data)
+
+            offset_in_seconds = forecast_data["city"]["timezone"]
+            tz = timezone(timedelta(seconds=offset_in_seconds))
+            date_time = datetime.fromtimestamp(forecast["dt"]).replace(tzinfo=tz)
+
+            forecast_list.append(
+                {
+                    "weather": weather_data,
+                    "date_time": date_time.isoformat(),
+                    "city_name": forecast_data["city"]["name"],
+                    "country_code": forecast_data["city"]["country"]
+                    if forecast_data["city"]["country"]
+                    else "-",
+                }
+            )
+
+        return forecast_list
+
+    def _get_mandatory_weather_data(self, source: Dict) -> Dict:
         weather_data = source.get("main", None)
         if not weather_data:
             raise WeatherStationError(
@@ -91,7 +156,7 @@ class OWMWeatherStation:
             values.append(value)
         return values
 
-    def _get_optional_data(self, source: Dict) -> Dict:
+    def _get_optional_weather_data(self, source: Dict) -> Dict:
         optional_data = {}
         wind_data = self._get_optional_wind_data(source=source.get("wind", {}))
         clouds_data = self._get_optional_clouds_data(source=source.get("clouds", {}))

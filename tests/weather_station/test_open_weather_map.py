@@ -1,3 +1,6 @@
+import os
+from datetime import date, timedelta
+
 import pytest
 
 from weather_companion.weather_station import (
@@ -30,7 +33,7 @@ class OpenWeatherMapClientMock(OpenWeatherMapClient):
         return self._current_state_response
 
 
-def test_response_should_include_mandatory_data():
+def test_get_current_state_response_should_include_mandatory_data():
     client = OpenWeatherMapClientMock()
     weather_station = OWMWeatherStation(client=client)
 
@@ -45,15 +48,17 @@ def test_response_should_include_mandatory_data():
     location = Location(51.5074, 0.1278, "London")
     response = weather_station.get_current_state(location)
     expected_response = {
-        "temperature": 23,
-        "humidity": 40,
-        "feels_like": 21,
-        "pressure": 1042,
+        "weather_data": {
+            "temperature": 23,
+            "humidity": 40,
+            "feels_like": 21,
+            "pressure": 1042,
+        }
     }
     assert response == expected_response
 
 
-def test_response_should_include_all_optional_data_if_present():
+def test_get_current_state_response_should_include_all_optional_data_if_present():
     client = OpenWeatherMapClientMock()
     weather_station = OWMWeatherStation(client=client)
     complete_mandatory_and_optional_data = {
@@ -79,23 +84,25 @@ def test_response_should_include_all_optional_data_if_present():
     client.set_current_state_response(complete_mandatory_and_optional_data)
     response = weather_station.get_current_state(Location(51.5074, 0.1278, "London"))
     expected_response = {
-        "temperature": 23,
-        "humidity": 40,
-        "feels_like": 21,
-        "pressure": 1042,
-        "wind_speed": 10,
-        "wind_gust": 15,
-        "wind_direction": 180,
-        "clouds": 20,
-        "rain_1h": 0.5,
-        "rain_3h": 1.5,
-        "snow_1h": 0.5,
-        "snow_3h": 1.5,
+        "weather_data": {
+            "temperature": 23,
+            "humidity": 40,
+            "feels_like": 21,
+            "pressure": 1042,
+            "wind_speed": 10,
+            "wind_gust": 15,
+            "wind_direction": 180,
+            "clouds": 20,
+            "rain_1h": 0.5,
+            "rain_3h": 1.5,
+            "snow_1h": 0.5,
+            "snow_3h": 1.5,
+        }
     }
     assert response == expected_response
 
 
-def test_should_fail_if_unexpected_weather_data_format_in_client():
+def test_get_current_state_should_fail_if_unexpected_weather_data_format_in_client():
     """
     Test that the weather station fails if the client does not return main weather data.
     """
@@ -115,7 +122,7 @@ def test_should_fail_if_unexpected_weather_data_format_in_client():
     assert str(e.value).startswith("Unexpected weather data fromat:")
 
 
-def test_should_fail_if_error_raised_by_client():
+def test_get_current_state_should_fail_if_error_raised_by_client():
     client = OpenWeatherMapClientMock()
     weather_station = OWMWeatherStation(client=client)
 
@@ -126,7 +133,7 @@ def test_should_fail_if_error_raised_by_client():
     assert str(e.value).startswith("Client error:")
 
 
-def test_should_fail_if_mandatory_data_missing():
+def test_get_current_state_should_fail_if_mandatory_data_missing():
     client = OpenWeatherMapClientMock()
     weather_station = OWMWeatherStation(client=client)
 
@@ -143,3 +150,20 @@ def test_should_fail_if_mandatory_data_missing():
         location = Location(51.5074, 0.1278, "London")
         with pytest.raises(WeatherStationError):
             weather_station.get_current_state(location)
+
+
+def __test_get_forecast_should_include_mandatory_data():
+    # read api key from env variable
+    api_key = os.environ.get("OPEN_WEATHER_MAP_API_KEY", None)
+    client = OpenWeatherMapClient(api_key=api_key)
+    weather_station = OWMWeatherStation(client=client)
+
+    location = Location(-34.6037, -58.3816, "SanNicolas")
+    forecast = weather_station.get_forecast(
+        location=location,
+        start_date=date.today(),
+        end_date=date.today() + timedelta(days=2),
+    )
+
+    print(forecast)
+    raise Exception("test not implemented")
