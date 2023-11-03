@@ -2,8 +2,8 @@ import pytest
 
 from weather_companion.weather_station import (
     Location,
-    OpenWeatherMap,
     OpenWeatherMapClient,
+    OWMWeatherStation,
     WeatherStationError,
 )
 
@@ -25,7 +25,7 @@ class OpenWeatherMapClientMock(OpenWeatherMapClient):
 
 def test_response_should_include_mandatory_data():
     client = OpenWeatherMapClientMock()
-    weather_station = OpenWeatherMap(client=client)
+    weather_station = OWMWeatherStation(client=client)
 
     complete_data = {
         "temp": 23,
@@ -48,7 +48,7 @@ def test_response_should_include_mandatory_data():
 
 def test_response_should_include_all_optional_data_if_present():
     client = OpenWeatherMapClientMock()
-    weather_station = OpenWeatherMap(client=client)
+    weather_station = OWMWeatherStation(client=client)
     complete_mandatory_and_optional_data = {
         "main": {
             "temp": 23,
@@ -93,7 +93,7 @@ def test_should_fail_if_no_main_weather_data_in_client():
     Test that the weather station fails if the client does not return main weather data.
     """
     client = OpenWeatherMapClientMock()
-    weather_station = OpenWeatherMap(client=client)
+    weather_station = OWMWeatherStation(client=client)
 
     client.set_current_state_response({"main": None})
     location = Location(51.5074, 0.1278, "London")
@@ -108,7 +108,7 @@ def test_should_fail_if_no_main_weather_data_in_client():
 
 def test_should_fail_if_mandatory_data_missing():
     client = OpenWeatherMapClientMock()
-    weather_station = OpenWeatherMap(client=client)
+    weather_station = OWMWeatherStation(client=client)
 
     complete_data = {
         "temp": 23,

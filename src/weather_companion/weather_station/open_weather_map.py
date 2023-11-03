@@ -2,7 +2,7 @@ from typing import Dict, List
 
 import requests
 
-from .station import Location, WeatherStationError
+from .base import Location, WeatherStationError
 
 
 class APIError(Exception):
@@ -32,7 +32,7 @@ class OpenWeatherMapClient:
         return response.json()
 
 
-class OpenWeatherMap:
+class OWMWeatherStation:
     """
     Defines a weather forecast provider that uses OpenWeatherMap.
     """

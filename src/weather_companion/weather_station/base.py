@@ -1,3 +1,6 @@
+from .location import Location
+
+
 class WeatherStationError(Exception):
     """
     Defines an exception that is raised when an error occurs in the WeatherStation class.
@@ -8,9 +11,6 @@ class WeatherStationError(Exception):
         Creates a new instance of the WeatherStationError class.
         """
         super().__init__(message)
-
-
-from .location import Location
 
 
 class WeatherStation:
