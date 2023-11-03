@@ -14,20 +14,23 @@ class OpenWeatherMapClient:
         self._api_key = api_key
         self._base_url = "https://api.openweathermap.org/data/2.5/weather"
 
-    def current_state(self, location: Location) -> dict:
+    def get_current_state(self, location: Location) -> dict:
         """
         Gets the current weather state for a given location.
         """
-        response = requests.get(
-            self._base_url
-            + "?lat={}&lon={}&appid={}".format(
-                location.latitude, location.longitude, self._api_key
+        try:
+            response = requests.get(
+                self._base_url
+                + "?lat={}&lon={}&appid={}".format(
+                    location.latitude, location.longitude, self._api_key
+                )
             )
-        )
-        if response.status_code != 200:
-            raise APIError(
-                f"OpenWeatherMap API returned an error: {response.status_code}-{response.text}"
-            )
+            if response.status_code != 200:
+                raise APIError(
+                    f"OpenWeatherMap API returned an error - {response.status_code}-{response.text}"
+                )
+        except Exception as ex:
+            raise APIError(f"OpenWeatherMap API error - {ex}")
 
         return response.json()
 
@@ -43,14 +46,14 @@ class OWMWeatherStation:
         """
         self._client = client
 
-    def current_state(self, location):
+    def get_current_state(self, location):
         """
         Gets the current weather state for a given location.
         """
         try:
-            weather_data = self._client.current_state(location)
+            weather_data = self._client.get_current_state(location)
         except APIError as ex:
-            raise WeatherStationError(f"Weather Station Client error: {ex.message}")
+            raise WeatherStationError(f"Client error: {ex}")
 
         # Get mandatory and optional data
         mandatory_data = self._get_mandatory_data(weather_data)
@@ -64,7 +67,9 @@ class OWMWeatherStation:
     def _get_mandatory_data(self, source: Dict) -> Dict:
         weather_data = source.get("main", None)
         if not weather_data:
-            raise WeatherStationError("No main weather data found in data source")
+            raise WeatherStationError(
+                "Unexpected weather data fromat: missing main field"
+            )
 
         mandatory_fields = ["temp", "humidity", "feels_like", "pressure"]
         temperature, humidity, feels_like, pressure = self._get_mandatory_fields(

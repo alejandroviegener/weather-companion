@@ -11,20 +11,37 @@ def test_should_create_location_with_valid_data():
 
 
 def test_should_fail_if_latitude_or_longitude_invalid():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         Location(91, 0, "London")
-    with pytest.raises(ValueError):
+    assert str(e.value) == "Latitude must be between -90 and 90"
+
+    with pytest.raises(ValueError) as e:
         Location(-91, 0, "London")
-    with pytest.raises(ValueError):
+    assert str(e.value) == "Latitude must be between -90 and 90"
+
+    with pytest.raises(ValueError) as e:
         Location(0, 181, "London")
-    with pytest.raises(ValueError):
+    assert str(e.value) == "Longitude must be between -90 and 90"
+
+    with pytest.raises(ValueError) as e:
         Location(0, -181, "London")
+    assert str(e.value) == "Longitude must be between -90 and 90"
 
 
 def test_should_fail_if_invalid_name():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         Location(51.5074, 0.1278, "")
-    with pytest.raises(ValueError):
+    assert str(e.value) == "Label must not be empty"
+
+    with pytest.raises(ValueError) as e:
         Location(51.5074, 0.1278, " ")
-    with pytest.raises(ValueError):
+    assert str(e.value) == "Label must not be empty"
+
+    with pytest.raises(ValueError) as e:
         Location(51.5074, 0.1278, "London!")
+    assert str(e.value) == "Label must be alphanumeric"
+
+
+def test_should_strip_whitespace_from_label():
+    location = Location(51.5074, 0.1278, " London  ")
+    assert location.label == "London"

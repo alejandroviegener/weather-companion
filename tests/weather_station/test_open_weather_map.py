@@ -1,6 +1,7 @@
 import pytest
 
 from weather_companion.weather_station import (
+    APIError,
     Location,
     OpenWeatherMapClient,
     OWMWeatherStation,
@@ -15,11 +16,17 @@ class OpenWeatherMapClientMock(OpenWeatherMapClient):
 
     def __init__(self) -> None:
         self._current_state_response = None
+        self._error = None
 
-    def set_current_state_response(self, response: dict):
+    def set_current_state_response(
+        self, response: dict, error: Exception = None
+    ) -> None:
         self._current_state_response = response
+        self._error = error
 
-    def current_state(self, location: Location) -> dict:
+    def get_current_state(self, location: Location) -> dict:
+        if self._error:
+            raise self._error
         return self._current_state_response
 
 
@@ -36,7 +43,7 @@ def test_response_should_include_mandatory_data():
     client.set_current_state_response({"main": complete_data})
 
     location = Location(51.5074, 0.1278, "London")
-    response = weather_station.current_state(location)
+    response = weather_station.get_current_state(location)
     expected_response = {
         "temperature": 23,
         "humidity": 40,
@@ -70,7 +77,7 @@ def test_response_should_include_all_optional_data_if_present():
         },
     }
     client.set_current_state_response(complete_mandatory_and_optional_data)
-    response = weather_station.current_state(Location(51.5074, 0.1278, "London"))
+    response = weather_station.get_current_state(Location(51.5074, 0.1278, "London"))
     expected_response = {
         "temperature": 23,
         "humidity": 40,
@@ -88,7 +95,7 @@ def test_response_should_include_all_optional_data_if_present():
     assert response == expected_response
 
 
-def test_should_fail_if_no_main_weather_data_in_client():
+def test_should_fail_if_unexpected_weather_data_format_in_client():
     """
     Test that the weather station fails if the client does not return main weather data.
     """
@@ -97,13 +104,26 @@ def test_should_fail_if_no_main_weather_data_in_client():
 
     client.set_current_state_response({"main": None})
     location = Location(51.5074, 0.1278, "London")
-    with pytest.raises(WeatherStationError):
-        weather_station.current_state(location)
+    with pytest.raises(WeatherStationError) as e:
+        weather_station.get_current_state(location)
+    assert str(e.value).startswith("Unexpected weather data fromat:")
 
     client.set_current_state_response({})
     location = Location(51.5074, 0.1278, "London")
     with pytest.raises(WeatherStationError):
-        weather_station.current_state(location)
+        weather_station.get_current_state(location)
+    assert str(e.value).startswith("Unexpected weather data fromat:")
+
+
+def test_should_fail_if_error_raised_by_client():
+    client = OpenWeatherMapClientMock()
+    weather_station = OWMWeatherStation(client=client)
+
+    client.set_current_state_response(None, APIError("some error message"))
+    location = Location(51.5074, 0.1278, "London")
+    with pytest.raises(WeatherStationError) as e:
+        weather_station.get_current_state(location)
+    assert str(e.value).startswith("Client error:")
 
 
 def test_should_fail_if_mandatory_data_missing():
@@ -122,4 +142,4 @@ def test_should_fail_if_mandatory_data_missing():
         client.set_current_state_response({"main": incomplete_data})
         location = Location(51.5074, 0.1278, "London")
         with pytest.raises(WeatherStationError):
-            weather_station.current_state(location)
+            weather_station.get_current_state(location)

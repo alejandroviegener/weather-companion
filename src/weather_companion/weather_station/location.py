@@ -15,12 +15,14 @@ class Location:
             raise ValueError("Longitude must be between -90 and 90")
 
         # Check that the label is not empty or blank string
-        # Check that label is alpha numeric
-        if not label.strip():
+        label = label.strip()
+        if not label:
             raise ValueError("Label must not be empty")
+
+        # Check that label is alpha numeric
         if not label.isalnum():
             raise ValueError("Label must be alphanumeric")
 
         self.latitude = latitude
         self.longitude = longitude
-        self.label = label.strip()
+        self.label = label

@@ -1,3 +1,5 @@
+from datetime import date
+
 from .location import Location
 
 
@@ -18,14 +20,14 @@ class WeatherStation:
     Defines an interface for weather forecast providers.
     """
 
-    def current_state(self, location: Location):
+    def get_current_state(self, location: Location):
         """
         Gets the current weather state for a given location.
         """
         raise NotImplementedError
 
-    def forecast(self, latitude, longitude, date_time):
+    def get_forecast(self, location: Location, start_date: date, end_date: date):
         """
-        Gets the weather forecast for a given latitude and longitude for a given date and time.
+        Gets the weather forecast for a given location for a given date range
         """
         raise NotImplementedError
