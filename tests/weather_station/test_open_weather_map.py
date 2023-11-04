@@ -6,13 +6,13 @@ import pytest
 from weather_companion.weather_station import (
     ClientError,
     Location,
-    OpenWeatherMapClient,
+    OWMClient,
     OWMWeatherStation,
     WeatherStationError,
 )
 
 
-class OpenWeatherMapClientMock(OpenWeatherMapClient):
+class OpenWeatherMapClientMock(OWMClient):
     """
     Mocks the OpenWeatherMapClient class. Used to test the OpenWeatherMap class.
     """
@@ -46,7 +46,7 @@ def test_get_current_state_response_should_include_mandatory_data():
     client.set_current_state_response({"main": complete_data})
 
     location = Location(51.5074, 0.1278, "London")
-    response = weather_station.get_current_state(location)
+    weather_state = weather_station.get_current_state(location)
     expected_response = {
         "weather_data": {
             "temperature": 23,
@@ -55,7 +55,10 @@ def test_get_current_state_response_should_include_mandatory_data():
             "pressure": 1042,
         }
     }
-    assert response == expected_response
+    assert weather_state.temperature == 23
+    assert weather_state.humidity == 40
+    assert weather_state.feels_like == 21
+    assert weather_state.pressure == 1042
 
 
 def test_get_current_state_response_should_include_all_optional_data_if_present():
@@ -82,24 +85,21 @@ def test_get_current_state_response_should_include_all_optional_data_if_present(
         },
     }
     client.set_current_state_response(complete_mandatory_and_optional_data)
-    response = weather_station.get_current_state(Location(51.5074, 0.1278, "London"))
-    expected_response = {
-        "weather_data": {
-            "temperature": 23,
-            "humidity": 40,
-            "feels_like": 21,
-            "pressure": 1042,
-            "wind_speed": 10,
-            "wind_gust": 15,
-            "wind_direction": 180,
-            "clouds": 20,
-            "rain_1h": 0.5,
-            "rain_3h": 1.5,
-            "snow_1h": 0.5,
-            "snow_3h": 1.5,
-        }
-    }
-    assert response == expected_response
+    weather_state = weather_station.get_current_state(
+        Location(51.5074, 0.1278, "London")
+    )
+    assert weather_state.temperature == 23
+    assert weather_state.humidity == 40
+    assert weather_state.feels_like == 21
+    assert weather_state.pressure == 1042
+    assert weather_state.clouds == 20
+    assert weather_state.rain_1h == 0.5
+    assert weather_state.rain_3h == 1.5
+    assert weather_state.snow_1h == 0.5
+    assert weather_state.snow_3h == 1.5
+    assert weather_state.wind_speed == 10
+    assert weather_state.wind_gust == 15
+    assert weather_state.wind_direction == 180
 
 
 def test_get_current_state_should_fail_if_unexpected_weather_data_format_in_client():
@@ -109,17 +109,15 @@ def test_get_current_state_should_fail_if_unexpected_weather_data_format_in_clie
     client = OpenWeatherMapClientMock()
     weather_station = OWMWeatherStation(client=client)
 
-    client.set_current_state_response({"main": None})
+    client.set_current_state_response({"main": {}})
     location = Location(51.5074, 0.1278, "London")
     with pytest.raises(WeatherStationError) as e:
         weather_station.get_current_state(location)
-    assert str(e.value).startswith("Unexpected weather data fromat:")
 
     client.set_current_state_response({})
     location = Location(51.5074, 0.1278, "London")
     with pytest.raises(WeatherStationError):
         weather_station.get_current_state(location)
-    assert str(e.value).startswith("Unexpected weather data fromat:")
 
 
 def test_get_current_state_should_fail_if_error_raised_by_client():
@@ -148,14 +146,14 @@ def test_get_current_state_should_fail_if_mandatory_data_missing():
         del incomplete_data[field]
         client.set_current_state_response({"main": incomplete_data})
         location = Location(51.5074, 0.1278, "London")
-        with pytest.raises(WeatherStationError):
+        with pytest.raises(WeatherStationError) as e:
             weather_station.get_current_state(location)
 
 
 def __test_get_forecast_should_include_mandatory_data():
     # read api key from env variable
     api_key = os.environ.get("OPEN_WEATHER_MAP_API_KEY", None)
-    client = OpenWeatherMapClient(api_key=api_key)
+    client = OWMClient(api_key=api_key)
     weather_station = OWMWeatherStation(client=client)
 
     location = Location(-34.6037, -58.3816, "SanNicolas")
