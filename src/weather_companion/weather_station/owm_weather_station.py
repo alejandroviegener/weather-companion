@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta, timezone
-from typing import Dict, List, Tuple
+from typing import Dict
 
 from .forecast import Forecast
 from .owm_client import ClientError, OWMClient

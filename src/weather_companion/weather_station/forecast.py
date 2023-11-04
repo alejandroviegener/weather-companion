@@ -17,7 +17,7 @@ class Forecast:
         # Check datetime is not allready in the list, use sets
         dates_inserted = set([forecast[0] for forecast in self._forecasts])
         if date_time in dates_inserted:
-            ValueError("Forecast for this date and time already exists")
+            ValueError("Weather state for this date and time already exists")
 
         forecast = (date_time, weather_state)
         self._forecasts.append(forecast)
@@ -38,3 +38,7 @@ class Forecast:
 
     def __len__(self):
         return len(self._forecasts)
+
+    def __iter__(self):
+        self._forecasts.sort(key=lambda x: x[0])
+        return iter(self._forecasts)

@@ -12,6 +12,8 @@ class OWMClient:
         self._api_key = api_key
         self._base_url = "https://api.openweathermap.org/data/2.5"
 
+        # @TODO: add retry and timeout policy
+
     def get_current_state(self, location: Location) -> dict:
         """
         Gets the current weather state for a given location.
