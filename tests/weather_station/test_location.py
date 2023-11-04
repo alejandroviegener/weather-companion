@@ -13,19 +13,19 @@ def test_should_create_location_with_valid_data():
 def test_should_fail_if_latitude_or_longitude_invalid():
     with pytest.raises(ValueError) as e:
         Location(91, 0, "London")
-    assert str(e.value) == "Latitude must be between -90 and 90"
+    assert str(e.value) == "Coordinate must be between -90 and 90"
 
     with pytest.raises(ValueError) as e:
         Location(-91, 0, "London")
-    assert str(e.value) == "Latitude must be between -90 and 90"
+    assert str(e.value) == "Coordinate must be between -90 and 90"
 
     with pytest.raises(ValueError) as e:
         Location(0, 181, "London")
-    assert str(e.value) == "Longitude must be between -90 and 90"
+    assert str(e.value) == "Coordinate must be between -90 and 90"
 
     with pytest.raises(ValueError) as e:
         Location(0, -181, "London")
-    assert str(e.value) == "Longitude must be between -90 and 90"
+    assert str(e.value) == "Coordinate must be between -90 and 90"
 
 
 def test_should_fail_if_invalid_name():
