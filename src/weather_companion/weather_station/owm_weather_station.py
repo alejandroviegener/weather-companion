@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Tuple
 
+from .forecast import Forecast
 from .owm_client import ClientError, OWMClient
 from .weather_state import WeatherState, WeatherStateBuilder
 from .weather_station import Location, WeatherStationError
@@ -31,7 +32,7 @@ class OWMWeatherStation:
 
     def get_forecast(
         self, location: Location, start_date: date, end_date: date
-    ) -> List[Tuple[datetime, str]]:
+    ) -> Forecast:
         """
         Gets the weather forecast for a given latitude and longitude for a given date and time.
         """
@@ -40,30 +41,48 @@ class OWMWeatherStation:
         except ClientError as ex:
             raise WeatherStationError(f"Client error: {ex}")
 
-        forecasts = client_data.get("list", None)
-        if not forecasts:
-            raise WeatherStationError(
-                "Unexpected weather data format: missing forecasts list"
-            )
+        forecast = self._build_forecast(client_data, start_date, end_date)
+        return forecast
 
-        tz = self._get_timezone(client_data)
-        result = []
+    def _build_forecast(self, client_data: Dict, start_date: date, end_date: date):
+        location_timezone = self._get_timezone(client_data)
+        forecast_data = self._get_forecast_data(client_data)
 
         # Get weather state for each datetime inside the range specified
-        for forecast in forecasts:
-            in_date_range = start_date <= date.fromtimestamp(forecast["dt"]) <= end_date
+        forecast = Forecast()
+        for data in forecast_data:
+            # Filter date range
+            forecast_datetime = self._get_forecast_datetime(data)
+            in_date_range = start_date <= forecast_datetime.date() <= end_date
             if not in_date_range:
                 continue
 
-            weather_state = self._build_weather_state(forecast)
-            date_time = self._get_date_time(tz, forecast)
-            result.append((date_time, weather_state))
+            # Create weather state and add forecast with its date and timezone to the forecast
+            weather_state = self._build_weather_state(data)
+            forecast.add(weather_state, forecast_datetime, location_timezone)
 
-        return result
+        return forecast
+
+    def _get_forecast_datetime(self, forecast) -> datetime:
+        try:
+            forecast_date_time = datetime.fromtimestamp(forecast["dt"])
+        except KeyError:
+            raise WeatherStationError("Client data error, missing forecast date")
+        return forecast_date_time
+
+    def _get_forecast_data(self, client_data):
+        forecasts = client_data.get("list", None)
+        if not forecasts:
+            raise WeatherStationError("Client data error, missing forecasts list")
+
+        return forecasts
 
     def _get_timezone(self, client_data):
-        offset_in_seconds = client_data["city"]["timezone"]
-        tz = timezone(timedelta(seconds=offset_in_seconds))
+        try:
+            offset_in_seconds = client_data["city"]["timezone"]
+            tz = timezone(timedelta(seconds=offset_in_seconds))
+        except KeyError:
+            raise WeatherStationError("Client data error, missing timezone")
         return tz
 
     def _build_weather_state(self, client_data):
@@ -97,7 +116,3 @@ class OWMWeatherStation:
         except ValueError as ex:
             raise WeatherStationError(f"Error creating weather state - {ex}")
         return weather_state
-
-    def _get_date_time(self, tz, forecast):
-        date_time = datetime.fromtimestamp(forecast["dt"]).replace(tzinfo=tz)
-        return date_time

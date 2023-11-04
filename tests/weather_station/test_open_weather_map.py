@@ -150,7 +150,7 @@ def test_get_current_state_should_fail_if_mandatory_data_missing():
             weather_station.get_current_state(location)
 
 
-def __test_get_forecast_should_include_mandatory_data():
+def _test_get_forecast_should_include_mandatory_data():
     # read api key from env variable
     api_key = os.environ.get("OPEN_WEATHER_MAP_API_KEY", None)
     client = OWMClient(api_key=api_key)
@@ -163,5 +163,6 @@ def __test_get_forecast_should_include_mandatory_data():
         end_date=date.today() + timedelta(days=2),
     )
 
-    print(forecast)
+    print([str(d) for d in forecast.get_dates()])
+    print(forecast.get_weather_state_for_date(date.today()))
     raise Exception("test not implemented")
