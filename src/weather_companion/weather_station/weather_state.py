@@ -133,40 +133,38 @@ class WeatherStateBuilder:
         )
 
     def _validate_mandatory_data_is_present(self) -> None:
-        if self._temperature is None:
-            raise ValueError("Temperature is mandatory")
-        if self._humidity is None:
-            raise ValueError("Humidity is mandatory")
-        if self._feels_like is None:
-            raise ValueError("Feels like is mandatory")
-        if self._pressure is None:
-            raise ValueError("Pressure is mandatory")
+        self._check_value_is_not_none(self._temperature, "temperature")
+        self._check_value_is_not_none(self._humidity, "humidity")
+        self._check_value_is_not_none(self._feels_like, "feels like")
+        self._check_value_is_not_none(self._pressure, "pressure")
 
     def _validate_data_consistency(self) -> None:
-        # Wind gust should be a positive float if not None
-        if self._wind_gust is not None and self._wind_gust < 0:
-            raise ValueError("Wind gust should be a positive float")
-        # Wind direction should be a float between 0 and 360 if not None
-        if self._wind_direction is not None and (
-            self._wind_direction < 0 or self._wind_direction > 360
-        ):
-            raise ValueError("Wind direction should be a float between 0 and 360")
-        # Clouds should be a float between 0 and 100 if not None
-        if self._clouds is not None and (self._clouds < 0 or self._clouds > 100):
-            raise ValueError("Clouds should be a float between 0 and 100")
-        # Rain should be a positive float if not None
-        if self._rain_1h is not None and self._rain_1h < 0:
-            raise ValueError("Rain should be a positive float")
-        if self._rain_3h is not None and self._rain_3h < 0:
-            raise ValueError("Rain should be a positive float")
-        # Snow should be a positive float if not None
-        if self._snow_1h is not None and self._snow_1h < 0:
-            raise ValueError("Snow should be a positive float")
-        if self._snow_3h is not None and self._snow_3h < 0:
-            raise ValueError("Snow should be a positive float")
-        # Humidity should be a float between 0 and 100
-        if self._humidity < 0 or self._humidity > 100:
-            raise ValueError("Humidity should be a float between 0 and 100")
-        # Preasure should be a positive float
-        if self._pressure < 0:
-            raise ValueError("Pressure should be a positive float")
+        self._check_is_positive_number_if_not_none(self._wind_gust, "wind gust")
+        self._check_is_valid_angle_if_not_none(self._wind_direction, "wind direction")
+        self._check_is_valid_percentage_if_not_none(self._clouds, "clouds")
+        self._check_is_positive_number_if_not_none(self._rain_1h, "rain 1h")
+        self._check_is_positive_number_if_not_none(self._rain_3h, "rain 3h")
+        self._check_is_positive_number_if_not_none(self._snow_1h, "snow 1h")
+        self._check_is_positive_number_if_not_none(self._snow_3h, "snow 3h")
+        self._check_is_valid_percentage_if_not_none(self._humidity, "humidity")
+        self._check_is_positive_number_if_not_none(self._pressure, "pressure")
+
+    @staticmethod
+    def _check_value_is_not_none(value, variable_name: str):
+        if value is None:
+            raise ValueError(f"{variable_name} is mandatory")
+
+    @staticmethod
+    def _check_is_valid_percentage_if_not_none(value, variable_name: str):
+        if value is not None and (value < 0 or value > 100):
+            raise ValueError(f"{variable_name} should be a value between 0 and 100")
+
+    @staticmethod
+    def _check_is_valid_angle_if_not_none(value, variable_name: str):
+        if value is not None and (value < 0 or value > 360):
+            raise ValueError(f"{variable_name} should be a value between 0 and 360")
+
+    @staticmethod
+    def _check_is_positive_number_if_not_none(value, variable_name: str):
+        if value is not None and value < 0:
+            raise ValueError(f"{variable_name} should be a positive number")
