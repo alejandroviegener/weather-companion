@@ -164,5 +164,5 @@ def _test_get_forecast_should_include_mandatory_data():
     )
 
     print([str(d) for d in forecast.get_dates()])
-    print(forecast.get_weather_state_for_date(date.today()))
+    print(forecast.get_weather_states_for_date(date.today()))
     raise Exception("test not implemented")

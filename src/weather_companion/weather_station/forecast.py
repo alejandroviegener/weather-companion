@@ -28,7 +28,7 @@ class Forecast:
         dates.sort()
         return dates
 
-    def get_weather_state_for_date(self, date: date) -> List[WeatherState]:
+    def get_weather_states_for_date(self, date: date) -> List[WeatherState]:
         # Returns a list of weather states for the date specified
         weather_states = []
         for forecast in self._forecasts:
