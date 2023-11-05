@@ -29,11 +29,11 @@ jobs:
 
     # Execute code quality checks
     - name: Execute code quality checks
-      run: docker-compose -f environments/test/docker-compose.yml exec weather-companion make code-quality 
+      run: docker-compose -f environments/test/docker-compose.yml exec -T weather-companion make code-quality 
 
     # Execute the test command
     - name: Execute tests 
-      run: docker-compose -f environments/test/docker-compose.yml exec weather-companion make test
+      run: docker-compose -f environments/test/docker-compose.yml exec -T weather-companion make test
 
     # Service down
     - name: Stop services
