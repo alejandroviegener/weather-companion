@@ -16,6 +16,8 @@ COPY pyproject.toml poetry.lock Makefile ./
 # Install dependencies
 RUN poetry install
 
+# CMD that does not stop 
+CMD ["tail", "-f", "/dev/null"]
+
 # Entrypoint is "poetry run make"
-ENTRYPOINT ["make"]
-#CMD while true; do sleep 30; done;
+#ENTRYPOINT ["make"]

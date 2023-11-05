@@ -22,10 +22,20 @@ jobs:
       run: |
         docker-compose -f environments/test/docker-compose.yml build
 
+    # Service up
+    - name: Start services
+      run: |
+        docker-compose -f environments/test/docker-compose.yml up -d
+
     # Execute code quality checks
     - name: Execute code quality checks
-      run: docker-compose -f environments/test/docker-compose.yml run weather-companion code-quality
+      run: docker-compose -f environments/test/docker-compose.yml exec weather-companion make code-quality 
 
     # Execute the test command
-    - name: Execute model-test command
-      run: docker-compose -f environments/test/docker-compose.yml run weather-companion test
+    - name: Execute tests 
+      run: docker-compose -f environments/test/docker-compose.yml exec weather-companion make test
+
+    # Service down
+    - name: Stop services
+      run: |
+        docker-compose -f environments/test/docker-compose.yml down
