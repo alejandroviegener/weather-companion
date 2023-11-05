@@ -1,0 +1,4 @@
+"""
+Implements a note class
+
+"""

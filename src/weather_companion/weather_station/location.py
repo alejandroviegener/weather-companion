@@ -33,3 +33,10 @@ class Location:
     def _check_is_valid_coordinate(self, coordinate):
         if coordinate < -90 or coordinate > 90:
             raise ValueError("Coordinate must be between -90 and 90")
+
+    def __eq__(self, other):
+        return (
+            self.latitude == other.latitude
+            and self.longitude == other.longitude
+            and self.label == other.label
+        )
