@@ -1,1 +1,4 @@
-from .weather_journal import AuthorID, JournalEntry, Note, WeatherJournal
+from .author import AuthorID
+from .filters import JournalEntryFilter
+from .note import Note
+from .weather_journal import JournalEntry, WeatherJournal

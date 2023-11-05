@@ -1,3 +1,6 @@
+from geopy.distance import geodesic
+
+
 class Location:
     """
     Defines a location.
@@ -19,6 +22,14 @@ class Location:
         self.latitude = latitude
         self.longitude = longitude
         self.label = label
+
+    def distance_to(self, other) -> float:
+        """
+        Returns the distance to another location in km
+        """
+        return geodesic(
+            (self.latitude, self.longitude), (other.latitude, other.longitude)
+        ).km
 
     def _check_is_alpha(self, label):
         if not label.isalnum():
