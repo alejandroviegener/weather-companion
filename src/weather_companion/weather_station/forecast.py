@@ -11,7 +11,7 @@ class Forecast:
     def add(
         self, weather_state: WeatherState, date_time: datetime, tz: timezone = None
     ) -> None:
-        if timezone:
+        if tz:
             date_time = date_time.replace(tzinfo=tz)
 
         # Check datetime is not allready in the list, use sets
