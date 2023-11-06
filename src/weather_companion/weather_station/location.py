@@ -1,3 +1,6 @@
+from geopy.distance import geodesic
+
+
 class Location:
     """
     Defines a location.
@@ -20,6 +23,14 @@ class Location:
         self.longitude = longitude
         self.label = label
 
+    def distance_to(self, other) -> float:
+        """
+        Returns the distance to another location in km
+        """
+        return geodesic(
+            (self.latitude, self.longitude), (other.latitude, other.longitude)
+        ).km
+
     def _check_is_alpha(self, label):
         if not label.isalnum():
             raise ValueError("Label must be alphanumeric")
@@ -33,3 +44,10 @@ class Location:
     def _check_is_valid_coordinate(self, coordinate):
         if coordinate < -90 or coordinate > 90:
             raise ValueError("Coordinate must be between -90 and 90")
+
+    def __eq__(self, other):
+        return (
+            self.latitude == other.latitude
+            and self.longitude == other.longitude
+            and self.label == other.label
+        )

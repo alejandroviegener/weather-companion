@@ -3,7 +3,6 @@ name = "weather_companion"
 version = "0.1.0"
 description = "Api that serves as a weather related info companion for your trips and day to day life"
 authors = ["Alejandro Viegener <alejandro.viegener@gmail.com>"]
-packages = [{include = "weather_companion", from="src"}]
 
 
 [tool.poetry.dependencies]
