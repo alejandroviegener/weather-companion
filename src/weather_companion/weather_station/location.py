@@ -31,6 +31,13 @@ class Location:
             (self.latitude, self.longitude), (other.latitude, other.longitude)
         ).km
 
+    def to_dict(self):
+        return {
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "label": self.label,
+        }
+
     def _check_is_alpha(self, label):
         if not label.isalnum():
             raise ValueError("Label must be alphanumeric")
