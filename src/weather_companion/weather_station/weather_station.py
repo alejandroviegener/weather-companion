@@ -1,6 +1,6 @@
-from datetime import date, datetime
-from typing import List, Tuple
+from datetime import date
 
+from .forecast import Forecast
 from .location import Location
 from .weather_state import WeatherState
 
@@ -22,16 +22,18 @@ class WeatherStation:
     Defines an interface for weather forecast providers.
     """
 
-    def get_current_state(self, location) -> WeatherState:
+    def get_current_state(self, location: Location) -> WeatherState:
         """
         Gets the current weather state for a given location.
+        Throws WeatherStationError if the weather station is unable to provide the weather state.
         """
         raise NotImplementedError
 
     def get_forecast(
         self, location: Location, start_date: date, end_date: date
-    ) -> List[Tuple[datetime, str]]:
+    ) -> Forecast:
         """
         Gets the weather forecast for a given location for a given date range
+        Throws WeatherStationError if the weather station is unable to provide the weather forecast.
         """
         raise NotImplementedError

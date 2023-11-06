@@ -42,6 +42,7 @@ class WeatherJournal:
         self._author = author
         self._journal_entries = []
 
+    # @TODO remove this, move to initializer, and make class immutable
     def add_entry(self, entry: JournalEntry):
         self._journal_entries.append(entry)
 
