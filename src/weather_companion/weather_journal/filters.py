@@ -32,7 +32,7 @@ class NoteContentFilter(JournalEntryFilter):
         self._content = content
 
     def condition(self, journal_entry: JournalEntry) -> bool:
-        searched_content = self._content.lower()
+        searched_content = self._content.lower().strip()
         return searched_content in journal_entry.note().content().lower()
 
 

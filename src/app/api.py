@@ -97,6 +97,7 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         return utils._serialize_journal_entry(journal_entry)
 
     # Get all journal entries
+    """
     @app.get(
         "/weather-companion/journal/entries",
         status_code=200,
@@ -106,23 +107,24 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
         journal = utils._get_entries(weather_companion=weather_companion, author_id=author_id)
         return utils._serialize_journal(journal)
+    """
 
-    # Filter journal entries
+    # Get all filtered journal entries
     @app.get(
         "/weather-companion/journal/entries",
         status_code=200,
         response_model_exclude_none=True,
     )
     async def get_filtered_entries(
-        region: str = Query(None), interval: str = Query(None), content: str = Query(None), apikey: str = Query(...)
+        interval: str = Query(None, title="start_date,end_date in YYYY-MM-DD format"),
+        region: str = Query(None, title="lat,long,distance"),
+        content: str = Query(None, title="content to search for"),
+        apikey: str = Query(...),
     ) -> Journal:
         author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
         journal = utils._get_entries(weather_companion=weather_companion, author_id=author_id)
-
-        if content is not None:
-            journal = utils._filter_by_content(journal, content)
-
-        return utils._serialize_journal(journal)
+        filtered_journal = utils._filter_journal(region=region, interval=interval, content=content, journal=journal)
+        return utils._serialize_journal(filtered_journal)
 
     # Delete a journal entry
     @app.delete(

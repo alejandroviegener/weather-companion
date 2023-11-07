@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Dict, List, Optional, Tuple
 
 import fastapi
@@ -74,14 +74,14 @@ def _add_journal_entry(
 
 def _deserialize_journal_entry(journal_entry: JournalEntry) -> wj.JournalEntry:
     try:
-        journal_entry: wj.JournalEntry = wj.JournalEntry(
+        deserialized_journal_entry: wj.JournalEntry = wj.JournalEntry(
             location=ws.Location(**journal_entry.location.model_dump(), label="testlocation"),
             date=journal_entry.date,
-            note=journal_entry.note,
+            note=wj.Note(journal_entry.note),
         )
     except Exception as e:
         raise fastapi.HTTPException(status_code=400, detail=str(e))
-    return journal_entry
+    return deserialized_journal_entry
 
 
 def _get_journal_entry(
@@ -108,14 +108,14 @@ def _serialize_journal_entry(journal_entry: wj.JournalEntry) -> JournalEntry:
 
 def _serialize_journal(journal: List[Tuple[int, wj.JournalEntry]]) -> Journal:
     serialized_journal = []
-    for j in journal:
-        ji = JournalItem(
-            id=j[0],
-            journal_entry=JournalEntry(
-                note=j[1].note(), date=j[1].date(), location=Location(**j[1].location().to_dict())
-            ),
+    for item in journal:
+        entry_id = item[0]
+        entry = item[1]
+        location = Location(**entry.location().to_dict())
+        serialized_item = JournalItem(
+            id=entry_id, journal_entry=JournalEntry(note=entry.note().content(), date=entry.date(), location=location)
         )
-        serialized_journal.append(ji)
+        serialized_journal.append(serialized_item)
     return Journal(entries=serialized_journal)
 
 
@@ -162,3 +162,38 @@ def _get_author_for_key(user_repository: UserRepository, apikey: str) -> wj.Auth
     user_id = _validate_user(user_repository=user_repository, apikey=apikey)
     author_id = wj.AuthorID(user_id)
     return author_id
+
+
+def _filter_journal(region: str, interval: str, content: str, journal: List[Tuple[int, wj.JournalEntry]]):
+    filters = []
+    if content is not None:
+        content_filter: wj.JournalEntryFilter = wj.NoteContentFilter(content)
+        filters.append(content_filter)
+
+    if region is not None:
+        # Split regios string "lat;long;distance"
+        region_split = region.split(",")
+        if len(region_split) != 3:
+            raise fastapi.HTTPException(status_code=422, detail="Invalid region format, expected lat;long;distance")
+        lat = float(region_split[0])
+        long = float(region_split[1])
+        distance = float(region_split[2])
+        location: ws.Location = ws.Location(latitude=lat, longitude=long, label="region")
+        region_filter: wj.JournalEntryFilter = wj.LocationProximityFilter(location=location, max_distance=distance)
+        filters.append(region_filter)
+
+    if interval is not None:
+        # Split interval string "start_date;end_date"
+        interval_split = interval.split(",")
+        if len(interval_split) != 2:
+            raise fastapi.HTTPException(status_code=422, detail="Invalid interval format, expected start_date;end_date")
+        start_date = datetime.strptime(interval_split[0], "%Y-%m-%d").date()
+        end_date = datetime.strptime(interval_split[1], "%Y-%m-%d").date()
+        interval_filter: wj.JournalEntryFilter = wj.DateRangeFilter(start_date=start_date, end_date=end_date)
+        filters.append(interval_filter)
+
+    and_filter = wj.AndFilter(filters=filters)
+    filtered_journal = [
+        (entry_id, journal_entry) for entry_id, journal_entry in journal if and_filter.condition(journal_entry)
+    ]
+    return filtered_journal
