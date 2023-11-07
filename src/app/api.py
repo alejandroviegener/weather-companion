@@ -215,8 +215,6 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
             bookmark=bookmark,
             author_id=author_id,
         )
-        weather_companion.get_current_weather_state_for_bookmark(bookmark=bookmark, author=author_id)
-
         return utils._serialize_weather_state(weather_state=weather_state)
 
     return app
