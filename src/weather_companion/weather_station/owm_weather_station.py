@@ -30,9 +30,7 @@ class OWMWeatherStation:
         weather_state = self._build_weather_state(client_data)
         return weather_state
 
-    def get_forecast(
-        self, location: Location, start_date: date, end_date: date
-    ) -> Forecast:
+    def get_forecast(self, location: Location, start_date: date, end_date: date) -> Forecast:
         """
         Gets the weather forecast for a given latitude and longitude for a given date and time.
         """

@@ -23,9 +23,7 @@ class LocationFilter(JournalEntryFilter):
         self._location = location
 
     def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        return [
-            entry for entry in journal_entries if entry.location() == self._location
-        ]
+        return [entry for entry in journal_entries if entry.location() == self._location]
 
 
 # Filters weather journal entries by date range
@@ -35,11 +33,7 @@ class DateRangeFilter(JournalEntryFilter):
         self._end_date = end_date
 
     def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        return [
-            entry
-            for entry in journal_entries
-            if self._start_date <= entry.date() <= self._end_date
-        ]
+        return [entry for entry in journal_entries if self._start_date <= entry.date() <= self._end_date]
 
 
 # Filters weather journal entries by note content
@@ -49,11 +43,7 @@ class NoteContentFilter(JournalEntryFilter):
 
     def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
         searched_content = self._content.lower()
-        return [
-            entry
-            for entry in journal_entries
-            if searched_content in entry.note().content().lower()
-        ]
+        return [entry for entry in journal_entries if searched_content in entry.note().content().lower()]
 
 
 # Filters weather entry journals by location proximity (in km)
@@ -64,9 +54,7 @@ class LocationProximityFilter(JournalEntryFilter):
 
     def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
         return [
-            entry
-            for entry in journal_entries
-            if self._location.distance_to(entry.location()) <= self._max_distance
+            entry for entry in journal_entries if self._location.distance_to(entry.location()) <= self._max_distance
         ]
 
 

@@ -27,9 +27,7 @@ class Location:
         """
         Returns the distance to another location in km
         """
-        return geodesic(
-            (self.latitude, self.longitude), (other.latitude, other.longitude)
-        ).km
+        return geodesic((self.latitude, self.longitude), (other.latitude, other.longitude)).km
 
     def to_dict(self):
         return {
@@ -53,8 +51,4 @@ class Location:
             raise ValueError("Coordinate must be between -90 and 90")
 
     def __eq__(self, other):
-        return (
-            self.latitude == other.latitude
-            and self.longitude == other.longitude
-            and self.label == other.label
-        )
+        return self.latitude == other.latitude and self.longitude == other.longitude and self.label == other.label

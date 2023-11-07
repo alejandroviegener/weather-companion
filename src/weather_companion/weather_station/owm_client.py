@@ -18,10 +18,7 @@ class OWMClient:
         """
         Gets the current weather state for a given location.
         """
-        endpoint = (
-            self._base_url
-            + f"/weather?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
-        )
+        endpoint = self._base_url + f"/weather?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
         response = self._request(endpoint)
         return response.json()
 
@@ -29,10 +26,7 @@ class OWMClient:
         """
         Gets the weather forecast for a location, given a start and end date.
         """
-        endpoint = (
-            self._base_url
-            + f"/forecast?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
-        )
+        endpoint = self._base_url + f"/forecast?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
         response = self._request(endpoint)
         return response.json()
 
@@ -40,9 +34,7 @@ class OWMClient:
         try:
             response = requests.get(endpoint)
             if response.status_code != 200:
-                raise ClientError(
-                    f"OpenWeatherMap API returned an error - {response.status_code} - {response.text}"
-                )
+                raise ClientError(f"OpenWeatherMap API returned an error - {response.status_code} - {response.text}")
         except Exception as ex:
             raise ClientError(f"OpenWeatherMap API error - {ex}")
         return response

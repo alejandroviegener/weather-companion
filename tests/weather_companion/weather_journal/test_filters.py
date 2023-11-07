@@ -49,12 +49,8 @@ def journal():
     )
 
     new_entry_1 = JournalEntry(location=location_1, note=note_1, date=now)
-    new_entry_2 = JournalEntry(
-        location=location_2, note=note_2, date=now + timedelta(days=1)
-    )
-    new_entry_3 = JournalEntry(
-        location=location_3, note=note_3, date=now + timedelta(days=2)
-    )
+    new_entry_2 = JournalEntry(location=location_2, note=note_2, date=now + timedelta(days=1))
+    new_entry_3 = JournalEntry(location=location_3, note=note_3, date=now + timedelta(days=2))
 
     journal.add_entry(new_entry_1)
     journal.add_entry(new_entry_2)

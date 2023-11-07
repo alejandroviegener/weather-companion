@@ -21,9 +21,7 @@ class OpenWeatherMapClientMock(OWMClient):
         self._current_state_response = None
         self._error = None
 
-    def set_current_state_response(
-        self, response: dict, error: Exception = None
-    ) -> None:
+    def set_current_state_response(self, response: dict, error: Exception = None) -> None:
         self._current_state_response = response
         self._error = error
 
@@ -85,9 +83,7 @@ def test_get_current_state_response_should_include_all_optional_data_if_present(
         },
     }
     client.set_current_state_response(complete_mandatory_and_optional_data)
-    weather_state = weather_station.get_current_state(
-        Location(51.5074, 0.1278, "London")
-    )
+    weather_state = weather_station.get_current_state(Location(51.5074, 0.1278, "London"))
     assert weather_state.temperature == 23
     assert weather_state.humidity == 40
     assert weather_state.feels_like == 21

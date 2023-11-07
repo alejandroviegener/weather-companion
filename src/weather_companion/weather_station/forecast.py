@@ -8,9 +8,7 @@ class Forecast:
     def __init__(self):
         self._forecasts = []
 
-    def add(
-        self, weather_state: WeatherState, date_time: datetime, tz: timezone = None
-    ) -> None:
+    def add(self, weather_state: WeatherState, date_time: datetime, tz: timezone = None) -> None:
         if tz:
             date_time = date_time.replace(tzinfo=tz)
 

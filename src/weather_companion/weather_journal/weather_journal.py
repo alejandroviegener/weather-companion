@@ -26,11 +26,7 @@ class JournalEntry:
         return f"{self._location.name()} - {self._date} - {self._note}"
 
     def __eq__(self, __value: object) -> bool:
-        return (
-            self._location == __value._location
-            and self._date == __value._date
-            and self._note == __value._note
-        )
+        return self._location == __value._location and self._date == __value._date and self._note == __value._note
 
 
 class WeatherJournal:
