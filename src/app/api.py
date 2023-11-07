@@ -10,50 +10,8 @@ from weather_companion import system as system
 from weather_companion import weather_journal as wj
 from weather_companion import weather_station as ws
 
-
-class WeatherState(BaseModel):
-    temperature: float
-    humidity: float
-    feels_like: float
-    pressure: float
-    wind_speed: Optional[float] = None
-    wind_gust: Optional[float] = None
-    wind_direction: Optional[float] = None
-    clouds: Optional[float] = None
-    rain_1h: Optional[float] = None
-    rain_3h: Optional[float] = None
-    snow_1h: Optional[float] = None
-    snow_3h: Optional[float] = None
-
-
-class Location(BaseModel):
-    latitude: float
-    longitude: float
-
-
-class ForecastItem(BaseModel):
-    date_time: datetime
-    weather_state: WeatherState
-
-
-class Forecast(BaseModel):
-    forecast: List[ForecastItem]
-    location: Location
-
-
-class JournalEntry(BaseModel):
-    note: str
-    date: date
-    location: Location
-
-
-class JournalItem(BaseModel):
-    id: int
-    journal_entry: JournalEntry
-
-
-class Journal(BaseModel):
-    entries: List[JournalItem]
+from . import utils
+from .model import Forecast, Journal, JournalEntry, WeatherState
 
 
 def create_app(model_filepath: str) -> fastapi.FastAPI:
@@ -70,10 +28,13 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         journal_repository=repo.InMemoryJournalRepository(),
     )
 
-    # Define API endpoints
+    ########################################## Heath Check #####################################################
+
     @app.get("/health", status_code=200)
     async def get_health() -> dict:
         return {"status": "OK"}
+
+    ########################################## Weather Station #################################################
 
     @app.get(
         "/weather-companion/weather/current",
@@ -81,10 +42,9 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         response_model_exclude_none=True,
     )
     async def get_current_weather_state(lat: float, long: float, label: str) -> WeatherState:
-        location: ws.Location = _get_location(lat, long, label)
-        weather_state = _get_current_weather_state(weather_companion, location)
-
-        return WeatherState(**weather_state.to_dict())
+        location: ws.Location = utils._deserialize_location(lat, long, label)
+        weather_state: WeatherState = utils._get_current_weather_state(weather_companion, location)
+        return weather_state
 
     @app.get(
         "/weather-companion/weather/forecast",
@@ -92,14 +52,11 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         response_model_exclude_none=True,
     )
     async def get_weather_forecast(lat: float, long: float, label: str, start_date: date, end_date: date) -> Forecast:
-        location: ws.Location = _get_location(lat, long, label)
-        weather_forecast: ws.Forecast = _get_weather_forecast(weather_companion, location, start_date, end_date)
+        location: ws.Location = utils._deserialize_location(lat, long, label)
+        weather_forecast: ws.Forecast = utils._get_weather_forecast(weather_companion, location, start_date, end_date)
+        return utils._serialize_weather_forecast(location, weather_forecast)
 
-        serialized_forecast = []
-        for wf in weather_forecast:
-            wfi = ForecastItem(date_time=wf[0], weather_state=WeatherState(**wf[1].to_dict()))
-            serialized_forecast.append(wfi)
-        return Forecast(forecast=serialized_forecast, location=Location(**location.to_dict()))
+    ########################################## Journal #########################################################
 
     @app.post(
         "/weather-companion/journal/entries",
@@ -107,19 +64,11 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         response_model_exclude_none=True,
     )
     async def add_journal_entry(journal_entry: JournalEntry) -> int:
-        try:
-            author_id = wj.AuthorID("test-author-id")
-            journal_entry: wj.JournalEntry = wj.JournalEntry(
-                location=ws.Location(**journal_entry.location.model_dump(), label="testlocation"),
-                date=journal_entry.date,
-                note=journal_entry.note,
-            )
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=400, detail=str(e))
-        try:
-            id = weather_companion.add_journal_entry(author=author_id, journal_entry=journal_entry)
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=500, detail=str(e))
+        author_id = wj.AuthorID("test-author-id")
+        journal_entry: wj.JournalEntry = utils._deserialize_journal_entry(journal_entry)
+        id = utils._add_journal_entry(
+            weather_companion=weather_companion, journal_entry=journal_entry, author_id=author_id
+        )
         return id
 
     @app.get(
@@ -128,18 +77,9 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         response_model_exclude_none=True,
     )
     async def get_entry(entry_id: int) -> JournalEntry:
-        try:
-            author_id = wj.AuthorID("test-author-id")
-            journal_entry: wj.JournalEntry = weather_companion.get_journal_entry(
-                author=author_id, journal_entry_id=entry_id
-            )
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=500, detail=str(e))
-        return JournalEntry(
-            note=journal_entry.note(),
-            date=journal_entry.date(),
-            location=Location(**journal_entry.location().to_dict()),
-        )
+        author_id = wj.AuthorID("test-author-id")
+        journal_entry: wj.JournalEntry = utils._get_journal_entry(entry_id, author_id)
+        return utils._serialize_journal_entry(journal_entry)
 
     @app.get(
         "/weather-companion/journal/entries",
@@ -147,22 +87,9 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         response_model_exclude_none=True,
     )
     async def get_entries() -> Journal:
-        try:
-            author_id = wj.AuthorID("test-author-id")
-            journal: List[Tuple[int, JournalEntry]] = weather_companion.get_all_journal_entries(author=author_id)
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=500, detail=str(e))
-
-        serialized_journal = []
-        for j in journal:
-            ji = JournalItem(
-                id=j[0],
-                journal_entry=JournalEntry(
-                    note=j[1].note(), date=j[1].date(), location=Location(**j[1].location().to_dict())
-                ),
-            )
-            serialized_journal.append(ji)
-        return Journal(entries=serialized_journal)
+        author_id = wj.AuthorID("test-author-id")
+        journal = utils._get_entries(weather_companion=weather_companion, author_id=author_id)
+        return utils._serialize_journal(journal)
 
     @app.delete(
         "/weather-companion/journal/entries/{entry_id}",
@@ -170,11 +97,8 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         response_model_exclude_none=True,
     )
     async def delete_entry(entry_id: int) -> None:
-        try:
-            author_id = wj.AuthorID("test-author-id")
-            weather_companion.remove_journal_entry(author=author_id, journal_entry_id=entry_id)
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=500, detail=str(e))
+        author_id = wj.AuthorID("test-author-id")
+        utils._delete_journal_entry(weather_companion=weather_companion, entry_id=entry_id, author_id=author_id)
 
     @app.patch(
         "/weather-companion/journal/entries/{entry_id}",
@@ -185,21 +109,14 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         entry_id: int = Path(..., title="journal entry id to update"),
         journal_entry: JournalEntry = Body(..., title="journal entry"),
     ) -> JournalEntry:
-        try:
-            author_id = wj.AuthorID("test-author-id")
-            new_journal_entry: wj.JournalEntry = wj.JournalEntry(
-                location=ws.Location(**journal_entry.location.model_dump(), label="testlocation"),
-                date=journal_entry.date,
-                note=journal_entry.note,
-            )
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=400, detail=str(e))
-        try:
-            weather_companion.update_journal_entry(
-                journal_entry_id=entry_id, author=author_id, new_journal_entry=new_journal_entry
-            )
-        except Exception as e:
-            raise fastapi.HTTPException(status_code=500, detail=str(e))
+        author_id = wj.AuthorID("test-author-id")
+        new_journal_entry = utils._deserialize_journal_entry(journal_entry)
+        utils._update_journal_entry(
+            weather_companion=weather_companion,
+            entry_id=entry_id,
+            author_id=author_id,
+            new_journal_entry=new_journal_entry,
+        )
         return journal_entry
 
     return app
@@ -211,40 +128,3 @@ import os
 # get filepath or use default
 model_filepath = os.getenv("MODEL_FILEPATH", "./tmp/delay_model.pkl")
 app = create_app(model_filepath)
-
-
-#######################################################################################################################
-################################################## Utils ##############################################################
-#######################################################################################################################
-
-
-def _get_location(lat, long, label) -> ws.Location:
-    try:
-        location: ws.Location = ws.Location(latitude=lat, longitude=long, label=label)
-    except Exception as e:
-        raise fastapi.HTTPException(status_code=400, detail=str(e))
-    return location
-
-
-def _get_current_weather_state(weather_companion: system.WeatherCompanion, location: ws.Location) -> ws.WeatherState:
-    try:
-        weather_state: ws.WeatherState = weather_companion.get_current_state(location)
-    except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
-    return weather_state
-
-
-def _get_weather_forecast(
-    weather_companion: system.WeatherCompanion,
-    location: ws.Location,
-    start_date: date,
-    end_date: date,
-) -> ws.Forecast:
-    try:
-        weather_forecast: ws.Forecast = weather_companion.get_forecast(
-            location=location, start_date=start_date, end_date=end_date
-        )
-    except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
-
-    return weather_forecast
