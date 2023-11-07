@@ -8,24 +8,12 @@ from .weather_journal import JournalEntry
 
 class JournalEntryFilter:
     """
-    Interface fora journal entry filter:
-        - receives an iterable of journal entries
-        - returns an iterable of journal entries
+    Interface for a journal entry filter:
+        - receives journal entry and returns true if it should be included in the result
     """
 
-    def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
+    def condition(self, journal_entrie: JournalEntry) -> bool:
         raise NotImplementedError("filter method not implemented")
-
-
-# Filters weather journal entries by exact location
-class LocationFilter(JournalEntryFilter):
-    def __init__(self, location: Location):
-        self._location = location
-
-    def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        return [
-            entry for entry in journal_entries if entry.location() == self._location
-        ]
 
 
 # Filters weather journal entries by date range
@@ -34,12 +22,8 @@ class DateRangeFilter(JournalEntryFilter):
         self._start_date = start_date
         self._end_date = end_date
 
-    def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        return [
-            entry
-            for entry in journal_entries
-            if self._start_date <= entry.date() <= self._end_date
-        ]
+    def condition(self, journal_entry: JournalEntry) -> bool:
+        return self._start_date <= journal_entry.date() <= self._end_date
 
 
 # Filters weather journal entries by note content
@@ -47,13 +31,9 @@ class NoteContentFilter(JournalEntryFilter):
     def __init__(self, content: str):
         self._content = content
 
-    def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        searched_content = self._content.lower()
-        return [
-            entry
-            for entry in journal_entries
-            if searched_content in entry.note().content().lower()
-        ]
+    def condition(self, journal_entry: JournalEntry) -> bool:
+        searched_content = self._content.lower().strip()
+        return searched_content in journal_entry.note().content().lower()
 
 
 # Filters weather entry journals by location proximity (in km)
@@ -62,12 +42,8 @@ class LocationProximityFilter(JournalEntryFilter):
         self._location = location
         self._max_distance = max_distance
 
-    def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        return [
-            entry
-            for entry in journal_entries
-            if self._location.distance_to(entry.location()) <= self._max_distance
-        ]
+    def condition(self, journal_entry: JournalEntry) -> bool:
+        return self._location.distance_to(journal_entry.location()) <= self._max_distance
 
 
 # And filter that combines multiple filters
@@ -75,8 +51,5 @@ class AndFilter(JournalEntryFilter):
     def __init__(self, filters: Iterable[JournalEntryFilter]):
         self._filters = filters
 
-    def filter(self, journal_entries: Iterable[JournalEntry]) -> List[JournalEntry]:
-        filtered_entries = list(journal_entries)
-        for filter in self._filters:
-            filtered_entries = filter.filter(filtered_entries)
-        return filtered_entries
+    def condition(self, journal_entry: JournalEntry) -> bool:
+        return all([filter.condition(journal_entry) for filter in self._filters])

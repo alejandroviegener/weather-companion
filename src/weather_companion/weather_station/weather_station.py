@@ -29,9 +29,7 @@ class WeatherStation:
         """
         raise NotImplementedError
 
-    def get_forecast(
-        self, location: Location, start_date: date, end_date: date
-    ) -> Forecast:
+    def get_forecast(self, location: Location, start_date: date, end_date: date) -> Forecast:
         """
         Gets the weather forecast for a given location for a given date range
         Throws WeatherStationError if the weather station is unable to provide the weather forecast.

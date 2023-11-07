@@ -67,9 +67,7 @@ def test_iterator_is_ordered_by_date(journal):
     note_2 = Note(content="Test content 2")
     location = Location(label="TestLocation", latitude=10.223, longitude=23.345)
     new_entry_1 = JournalEntry(location=location, date=datetime.now(), note=note_1)
-    new_entry_2 = JournalEntry(
-        location=location, date=datetime.now() + timedelta(seconds=1), note=note_2
-    )
+    new_entry_2 = JournalEntry(location=location, date=datetime.now() + timedelta(seconds=1), note=note_2)
     journal.add_entry(new_entry_2)
     journal.add_entry(new_entry_1)
 

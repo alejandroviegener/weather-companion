@@ -18,6 +18,11 @@ format:
 	poetry run black .
 	poetry run isort --profile black .
 
+# run api
+api-run:
+	@echo "Running api..."
+	poetry run uvicorn src.app.api:app --port 8000
+
 # Add additional targets as needed...
 
 # Special target for help

@@ -24,14 +24,10 @@ class RepositoryError(Exception):
 class JournalRepository:
     """Interface for a journal repository"""
 
-    def add(
-        self, entry: weather_journal.JournalEntry, author_id: weather_journal.AuthorID
-    ) -> int:
+    def add(self, entry: weather_journal.JournalEntry, author_id: weather_journal.AuthorID) -> int:
         pass
 
-    def get(
-        self, entry_id: int, author_id: weather_journal.AuthorID
-    ) -> weather_journal.JournalEntry:
+    def get(self, entry_id: int, author_id: weather_journal.AuthorID) -> weather_journal.JournalEntry:
         pass
 
     def update(
@@ -45,9 +41,7 @@ class JournalRepository:
     def remove(self, entry_id: int, author_id: weather_journal.AuthorID) -> None:
         pass
 
-    def get_all_entries(
-        self, author_id: weather_journal.AuthorID
-    ) -> List[Tuple[int, weather_journal.JournalEntry]]:
+    def get_all_entries(self, author_id: weather_journal.AuthorID) -> List[Tuple[int, weather_journal.JournalEntry]]:
         pass
 
 
@@ -55,9 +49,7 @@ class InMemoryJournalRepository(JournalRepository):
     def __init__(self):
         self._container = []
 
-    def add(
-        self, entry: weather_journal.JournalEntry, author_id: weather_journal.AuthorID
-    ) -> int:
+    def add(self, entry: weather_journal.JournalEntry, author_id: weather_journal.AuthorID) -> int:
         """
         Adds the entry to the container and returns the unique assigned id
         """
@@ -65,9 +57,7 @@ class InMemoryJournalRepository(JournalRepository):
         self._container.append([max_id + 1, entry, author_id])
         return max_id + 1
 
-    def get(
-        self, entry_id: int, author_id: weather_journal.AuthorID
-    ) -> weather_journal.JournalEntry:
+    def get(self, entry_id: int, author_id: weather_journal.AuthorID) -> weather_journal.JournalEntry:
         """
         Gets the entry with the given id from the container
         Throws RepositoryError if value not found
@@ -104,9 +94,7 @@ class InMemoryJournalRepository(JournalRepository):
                 return
         raise RepositoryError("Journal entry not found")
 
-    def get_all_entries(
-        self, author_id: weather_journal.AuthorID
-    ) -> List[Tuple[int, weather_journal.JournalEntry]]:
+    def get_all_entries(self, author_id: weather_journal.AuthorID) -> List[Tuple[int, weather_journal.JournalEntry]]:
         """
         Gets the entire journal for an author
         """

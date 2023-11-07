@@ -30,9 +30,7 @@ class WeatherStationMock(WeatherStation):
             raise self.exception
         return self.weather_state
 
-    def get_forecast(
-        self, location: Location, start_date: date, end_date: date
-    ) -> Forecast:
+    def get_forecast(self, location: Location, start_date: date, end_date: date) -> Forecast:
         if self.exception:
             raise self.exception
         return self.forecast
@@ -49,9 +47,7 @@ def test_should_get_current_weather_state():
         pressure=1024,
     )
     weather_station.weather_state = state
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=None
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=None)
     location = Location(latitude=10, longitude=20, label="test")
     result = weather_companion.get_current_state(location)
     assert result == state
@@ -60,9 +56,7 @@ def test_should_get_current_weather_state():
 def test_should_raise_exception_if_error_getting_current_weather_state():
     weather_station = WeatherStationMock()
     weather_station.exception = WeatherStationError("test")
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=None
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=None)
     location = Location(latitude=10, longitude=20, label="test")
 
     with pytest.raises(system.WeatherCompanionError):
@@ -83,37 +77,27 @@ def test_should_get_forecast():
 
     weather_station = WeatherStationMock()
     weather_station.forecast = forecast
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=None
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=None)
 
     location = Location(latitude=10, longitude=20, label="test")
-    result = weather_companion.get_forecast(
-        location, start_date="2020-01-01", end_date="2020-01-02"
-    )
+    result = weather_companion.get_forecast(location, start_date="2020-01-01", end_date="2020-01-02")
     assert result == forecast
 
 
 def test_should_raise_exception_if_error_getting_forecast():
     weather_station = WeatherStationMock()
     weather_station.exception = WeatherStationError("test")
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=None
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=None)
     location = Location(latitude=10, longitude=20, label="test")
 
     with pytest.raises(system.WeatherCompanionError):
-        weather_companion.get_forecast(
-            location, start_date="2020-01-01", end_date="2020-01-02"
-        )
+        weather_companion.get_forecast(location, start_date="2020-01-01", end_date="2020-01-02")
 
 
 def test_should_add_journal_entry():
     weather_station = WeatherStationMock()
     journal_repository = InMemoryJournalRepository()
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=journal_repository
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=journal_repository)
     journal_entry = JournalEntry(
         location=Location(latitude=10, longitude=20, label="test"),
         date="2020-01-01",
@@ -127,9 +111,7 @@ def test_should_add_journal_entry():
 def test_should_get_journal_entry():
     weather_station = WeatherStationMock()
     journal_repository = InMemoryJournalRepository()
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=journal_repository
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=journal_repository)
     journal_entry = JournalEntry(
         location=Location(latitude=10, longitude=20, label="test"),
         date="2020-01-01",
@@ -144,9 +126,7 @@ def test_should_get_journal_entry():
 def test_should_remove_existing_journal_entry():
     weather_station = WeatherStationMock()
     journal_repository = InMemoryJournalRepository()
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=journal_repository
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=journal_repository)
     journal_entry = JournalEntry(
         location=Location(latitude=10, longitude=20, label="test"),
         date="2020-01-01",
@@ -162,9 +142,7 @@ def test_should_remove_existing_journal_entry():
 def test_should_update_existing_journal_entry():
     weather_station = WeatherStationMock()
     journal_repository = InMemoryJournalRepository()
-    weather_companion = system.WeatherCompanion(
-        weather_station=weather_station, journal_repository=journal_repository
-    )
+    weather_companion = system.WeatherCompanion(weather_station=weather_station, journal_repository=journal_repository)
     journal_entry = JournalEntry(
         location=Location(latitude=10, longitude=20, label="test"),
         date="2020-01-01",
