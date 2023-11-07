@@ -38,7 +38,7 @@ def _get_current_weather_state(weather_companion: system.WeatherCompanion, locat
     try:
         weather_state: ws.WeatherState = weather_companion.get_current_state(location)
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
     return WeatherState(**weather_state.to_dict())
 
 
@@ -53,7 +53,7 @@ def _get_weather_forecast(
             location=location, start_date=start_date, end_date=end_date
         )
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
 
     return weather_forecast
 
@@ -78,7 +78,7 @@ def _add_journal_entry(
     try:
         id = weather_companion.add_journal_entry(author=author_id, journal_entry=journal_entry)
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
     return id
 
 
@@ -103,13 +103,13 @@ def _get_journal_entry(
             author=author_id, journal_entry_id=entry_id
         )
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
     return journal_entry
 
 
 def _serialize_journal_entry(journal_entry: wj.JournalEntry) -> JournalEntry:
     serialized_journal_entry = JournalEntry(
-        note=journal_entry.note(),
+        note=journal_entry.note().content(),
         date=journal_entry.date(),
         location=Location(**journal_entry.location().to_dict()),
     )
@@ -135,7 +135,7 @@ def _get_entries(
     try:
         journal: List[Tuple[int, JournalEntry]] = weather_companion.get_all_journal_entries(author=author_id)
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
     return journal
 
 
@@ -143,7 +143,7 @@ def _delete_journal_entry(weather_companion: system.WeatherCompanion, entry_id: 
     try:
         weather_companion.remove_journal_entry(author=author_id, journal_entry_id=entry_id)
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
 
 
 def _update_journal_entry(
@@ -157,7 +157,7 @@ def _update_journal_entry(
             journal_entry_id=entry_id, author=author_id, new_journal_entry=new_journal_entry
         )
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
 
 
 def _validate_user(user_repository: UserRepository, apikey: str) -> str:
@@ -184,10 +184,13 @@ def _filter_journal(region: str, interval: str, content: str, journal: List[Tupl
         # Split regios string "lat;long;distance"
         region_split = region.split(",")
         if len(region_split) != 3:
-            raise fastapi.HTTPException(status_code=422, detail="Invalid region format, expected lat;long;distance")
-        lat = float(region_split[0])
-        long = float(region_split[1])
-        distance = float(region_split[2])
+            raise fastapi.HTTPException(status_code=400, detail="Invalid region format, expected lat;long;distance")
+        try:
+            lat = float(region_split[0])
+            long = float(region_split[1])
+            distance = float(region_split[2])
+        except ValueError:
+            raise fastapi.HTTPException(status_code=400, detail="Expecting float values")
         location: ws.Location = ws.Location(latitude=lat, longitude=long)
         region_filter: wj.JournalEntryFilter = wj.LocationProximityFilter(location=location, max_distance=distance)
         filters.append(region_filter)
@@ -196,9 +199,12 @@ def _filter_journal(region: str, interval: str, content: str, journal: List[Tupl
         # Split interval string "start_date;end_date"
         interval_split = interval.split(",")
         if len(interval_split) != 2:
-            raise fastapi.HTTPException(status_code=422, detail="Invalid interval format, expected start_date;end_date")
-        start_date = datetime.strptime(interval_split[0], "%Y-%m-%d").date()
-        end_date = datetime.strptime(interval_split[1], "%Y-%m-%d").date()
+            raise fastapi.HTTPException(status_code=400, detail="Invalid interval format, expected start_date;end_date")
+        try:
+            start_date = datetime.strptime(interval_split[0], "%Y-%m-%d").date()
+            end_date = datetime.strptime(interval_split[1], "%Y-%m-%d").date()
+        except ValueError:
+            raise fastapi.HTTPException(status_code=400, detail="Invalid date format, expected YYYY-MM-DD")
         interval_filter: wj.JournalEntryFilter = wj.DateRangeFilter(start_date=start_date, end_date=end_date)
         filters.append(interval_filter)
 

@@ -149,3 +149,4 @@ Tests are run automatically in the CI pipeline
 - Coverage computation in CI pipeline
 - Database as a Docker Service and persistent database implementations
 - Add functionality to change the units system. Metric system for now
+- Request by city implementation
