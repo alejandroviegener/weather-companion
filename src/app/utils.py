@@ -17,6 +17,7 @@ from .model import (
     Location,
     WeatherState,
 )
+from .user_repository import UserRepository
 
 
 def _deserialize_location(lat, long, label) -> ws.Location:
@@ -147,3 +148,17 @@ def _update_journal_entry(
         )
     except Exception as e:
         raise fastapi.HTTPException(status_code=500, detail=str(e))
+
+
+def _validate_user(user_repository: UserRepository, apikey: str) -> str:
+    try:
+        user_id = user_repository.get_user(apikey)
+    except KeyError:
+        raise fastapi.HTTPException(status_code=401, detail="Invalid API key")
+    return user_id
+
+
+def _get_author_for_key(user_repository: UserRepository, apikey: str) -> wj.AuthorID:
+    user_id = _validate_user(user_repository=user_repository, apikey=apikey)
+    author_id = wj.AuthorID(user_id)
+    return author_id
