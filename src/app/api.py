@@ -35,7 +35,7 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
     user_repository.add_user("test-user-2", "8fdce8a4-7d6b-11ee-b962-0242ac120002")
     user_repository.add_user("test-user-3", "8fdce8a4-7d6b-11ee-b962-0242ac120003")
 
-    ########################################## Heath Check #####################################################
+    ########################################## Health Check #####################################################
 
     @app.get("/health", status_code=200)
     async def get_health() -> dict:
@@ -105,6 +105,23 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
     async def get_entries(apikey: str = Query(...)) -> Journal:
         author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
         journal = utils._get_entries(weather_companion=weather_companion, author_id=author_id)
+        return utils._serialize_journal(journal)
+
+    # Filter journal entries
+    @app.get(
+        "/weather-companion/journal/entries",
+        status_code=200,
+        response_model_exclude_none=True,
+    )
+    async def get_filtered_entries(
+        region: str = Query(None), interval: str = Query(None), content: str = Query(None), apikey: str = Query(...)
+    ) -> Journal:
+        author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
+        journal = utils._get_entries(weather_companion=weather_companion, author_id=author_id)
+
+        if content is not None:
+            journal = utils._filter_by_content(journal, content)
+
         return utils._serialize_journal(journal)
 
     # Delete a journal entry
