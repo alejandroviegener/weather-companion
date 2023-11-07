@@ -47,3 +47,12 @@ class JournalItem(BaseModel):
 
 class Journal(BaseModel):
     entries: List[JournalItem]
+
+
+class Bookmark(BaseModel):
+    name: str
+    location: Location
+
+
+class Bookmarks(BaseModel):
+    bookmarks: List[Bookmark]

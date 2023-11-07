@@ -11,7 +11,15 @@ from weather_companion import weather_journal as wj
 from weather_companion import weather_station as ws
 
 from . import utils
-from .model import Forecast, Journal, JournalEntry, WeatherState
+from .model import (
+    Bookmark,
+    Bookmarks,
+    Forecast,
+    Journal,
+    JournalEntry,
+    Location,
+    WeatherState,
+)
 from .user_repository import UserRepository
 
 
@@ -27,6 +35,7 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
     weather_companion: system.WeatherCompanion = system.WeatherCompanion(
         weather_station=weather_station,
         journal_repository=repo.InMemoryJournalRepository(),
+        bookmark_repository=repo.InMemoryLocationBookmarkRepository(),
     )
 
     # Initialize author repository and insert some test users
@@ -144,6 +153,39 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
             new_journal_entry=new_journal_entry,
         )
         return journal_entry
+
+    ########################################## Bookmarks #######################################################
+
+    @app.get(
+        "/weather-companion/bookmarks",
+        status_code=200,
+        response_model_exclude_none=True,
+    )
+    async def get_all_bookmarks(apikey: str = Query(...)):
+        author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
+        bookmarks: List[Tuple[repo.Bookmark, ws.Location]] = weather_companion._bookmark_repository.get_all_bookmarks(
+            author_id
+        )
+        return utils._serialize_bookmarks(bookmarks=bookmarks)
+
+    @app.post(
+        "/weather-companion/bookmarks",
+        status_code=200,
+        response_model_exclude_none=True,
+    )
+    async def add_bookmark(bookmark: Bookmark, apikey: str = Query(...)) -> Bookmark:
+        author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
+        deserialized_location: ws.Location = utils._deserialize_location(
+            lat=bookmark.location.latitude, long=bookmark.location.longitude, label="location"
+        )
+        deserialized_bookmark: repo.Bookmark = utils._deserialize_bookmark(bookmark=bookmark)
+        utils._add_bookmark(
+            weather_companion=weather_companion,
+            bookmark=deserialized_bookmark,
+            location=deserialized_location,
+            author_id=author_id,
+        )
+        return bookmark
 
     return app
 

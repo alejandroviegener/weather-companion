@@ -1,8 +1,12 @@
 from datetime import date
 from typing import List, Tuple
 
-from weather_companion.bookmark import LocationBookmark
-from weather_companion.repository import JournalRepository, RepositoryError
+from weather_companion.repository import (
+    Bookmark,
+    JournalRepository,
+    LocationBookmarkRepository,
+    RepositoryError,
+)
 from weather_companion.weather_journal import AuthorID, JournalEntry, WeatherJournal
 from weather_companion.weather_station import (
     Forecast,
@@ -26,9 +30,15 @@ class WeatherCompanionError(Exception):
 
 
 class WeatherCompanion:
-    def __init__(self, weather_station: WeatherStation, journal_repository: JournalRepository):
+    def __init__(
+        self,
+        weather_station: WeatherStation,
+        journal_repository: JournalRepository,
+        bookmark_repository: LocationBookmarkRepository,
+    ):
         self._weather_station = weather_station
         self._journal_repository = journal_repository
+        self._bookmark_repository = bookmark_repository
 
     #########################################################################################################
     ####################################### WeatherStation ##################################################
@@ -118,21 +128,13 @@ class WeatherCompanion:
     #########################################################################################################
 
     # Get bookmarks for an author from the repository
-    def get_bookmarks(self, author: AuthorID):
-        pass
+    def get_bookmarks(self, author: AuthorID) -> List[Tuple[Bookmark, Location]]:
+        self._bookmark_repository.get_all_bookmarks(author)
 
     # Add a new bookmark for an author into the repository
-    def add_bookmark(self, bookmark: LocationBookmark, author: AuthorID):
-        pass
+    def add_bookmark(self, bookmark: Bookmark, location: Location, author: AuthorID):
+        self._bookmark_repository.add(bookmark=bookmark, location=location, author_id=author)
 
     # Remove a bookmark for an author from the repository
-    def remove_bookmark(self, bookmark: LocationBookmark, author: AuthorID):
-        pass
-
-    # Update a bookmark for an author from the repository
-    def update_bookmark(self, bookmark: LocationBookmark, author: AuthorID):
-        pass
-
-    # Get the weather state for a bookmark
-    def get_bookmark_weather(self, bookmark: LocationBookmark) -> WeatherState:
-        pass
+    def remove_bookmark(self, bookmark: Bookmark, author: AuthorID):
+        self._bookmark_repository.remove(bookmark=bookmark, author_id=author)

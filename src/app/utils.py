@@ -9,6 +9,8 @@ from weather_companion import weather_journal as wj
 from weather_companion import weather_station as ws
 
 from .model import (
+    Bookmark,
+    Bookmarks,
     Forecast,
     ForecastItem,
     Journal,
@@ -20,12 +22,16 @@ from .model import (
 from .user_repository import UserRepository
 
 
-def _deserialize_location(lat, long, label) -> ws.Location:
+def _deserialize_location(lat: float, long: float, label: str) -> ws.Location:
     try:
         location: ws.Location = ws.Location(latitude=lat, longitude=long, label=label)
     except Exception as e:
         raise fastapi.HTTPException(status_code=400, detail=str(e))
     return location
+
+
+def _serialize_location(location: ws.Location) -> Location:
+    return Location(**location.to_dict())
 
 
 def _get_current_weather_state(weather_companion: system.WeatherCompanion, location: ws.Location) -> WeatherState:
@@ -197,3 +203,27 @@ def _filter_journal(region: str, interval: str, content: str, journal: List[Tupl
         (entry_id, journal_entry) for entry_id, journal_entry in journal if and_filter.condition(journal_entry)
     ]
     return filtered_journal
+
+
+def _serialize_bookmarks(bookmarks: List[Tuple[repo.Bookmark, ws.Location]]) -> Bookmarks:
+    serialized_bookmarks = []
+    for bookmark, location in bookmarks:
+        location = Location(**location.to_dict())
+        bookmark_name = bookmark.name()
+        bookmark_item = Bookmark(name=bookmark_name, location=location)
+        serialized_bookmarks.append(bookmark_item)
+    return Bookmarks(bookmarks=serialized_bookmarks)
+
+
+def _deserialize_bookmark(bookmark: Bookmark) -> repo.Bookmark:
+    deserialized_bookmark = repo.Bookmark(name=bookmark.name)
+    return deserialized_bookmark
+
+
+def _add_bookmark(
+    weather_companion: system.WeatherCompanion, bookmark: Bookmark, location: ws.Location, author_id: wj.AuthorID
+):
+    try:
+        weather_companion._bookmark_repository.add(bookmark=bookmark, location=location, author_id=author_id)
+    except repo.RepositoryError as e:
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
