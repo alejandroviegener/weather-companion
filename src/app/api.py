@@ -96,19 +96,6 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         journal_entry: wj.JournalEntry = utils._get_journal_entry(entry_id, author_id)
         return utils._serialize_journal_entry(journal_entry)
 
-    # Get all journal entries
-    """
-    @app.get(
-        "/weather-companion/journal/entries",
-        status_code=200,
-        response_model_exclude_none=True,
-    )
-    async def get_entries(apikey: str = Query(...)) -> Journal:
-        author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
-        journal = utils._get_entries(weather_companion=weather_companion, author_id=author_id)
-        return utils._serialize_journal(journal)
-    """
-
     # Get all filtered journal entries
     @app.get(
         "/weather-companion/journal/entries",
