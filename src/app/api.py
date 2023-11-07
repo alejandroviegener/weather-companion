@@ -128,10 +128,10 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         status_code=200,
         response_model_exclude_none=True,
     )
-    async def delete_entry(entry_id: int, apikey: str = Query(...)) -> bool:
+    async def delete_entry(entry_id: int, apikey: str = Query(...)) -> str:
         author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
         utils._delete_journal_entry(weather_companion=weather_companion, entry_id=entry_id, author_id=author_id)
-        return True
+        return "success"
 
     # Update a journal entry
     @app.patch(
@@ -163,7 +163,7 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
     )
     async def get_all_bookmarks(apikey: str = Query(...)):
         author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
-        bookmarks: List[Tuple[repo.Bookmark, ws.Location]] = weather_companion._bookmark_repository.get_all_bookmarks(
+        bookmarks: List[Tuple[wj.Bookmark, ws.Location]] = weather_companion._bookmark_repository.get_all_bookmarks(
             author_id
         )
         return utils._serialize_bookmarks(bookmarks=bookmarks)
@@ -178,7 +178,7 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         deserialized_location: ws.Location = utils._deserialize_location(
             lat=bookmark.location.latitude, long=bookmark.location.longitude, label="location"
         )
-        deserialized_bookmark: repo.Bookmark = utils._deserialize_bookmark(bookmark=bookmark)
+        deserialized_bookmark: wj.Bookmark = utils._deserialize_bookmark(bookmark=bookmark)
         utils._add_bookmark(
             weather_companion=weather_companion,
             bookmark=deserialized_bookmark,
@@ -186,6 +186,38 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
             author_id=author_id,
         )
         return bookmark
+
+    @app.delete(
+        "/weather-companion/bookmarks/{name}",
+        status_code=200,
+        response_model_exclude_none=True,
+    )
+    async def delete_bookmark(name: str, apikey: str = Query(...)) -> str:
+        author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
+        bookmark: repo.Bookmark = repo.Bookmark(name=name)
+        utils._delete_bookmark(
+            weather_companion=weather_companion,
+            bookmark=bookmark,
+            author_id=author_id,
+        )
+        return "success"
+
+    @app.get(
+        "/weather-companion/bookmarks/{name}/weather/current",
+        status_code=200,
+        response_model_exclude_none=True,
+    )
+    async def get_current_weather_for_bookmark(name: str, apikey: str = Query(...)) -> WeatherState:
+        author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
+        bookmark: wj.Bookmark = wj.Bookmark(name=name)
+        weather_state: ws.WeatherState = utils._get_current_weather_state_for_bookmark(
+            weather_companion=weather_companion,
+            bookmark=bookmark,
+            author_id=author_id,
+        )
+        weather_companion.get_current_weather_state_for_bookmark(bookmark=bookmark, author=author_id)
+
+        return utils._serialize_weather_state(weather_state=weather_state)
 
     return app
 

@@ -2,12 +2,16 @@ from datetime import date
 from typing import List, Tuple
 
 from weather_companion.repository import (
-    Bookmark,
     JournalRepository,
     LocationBookmarkRepository,
     RepositoryError,
 )
-from weather_companion.weather_journal import AuthorID, JournalEntry, WeatherJournal
+from weather_companion.weather_journal import (
+    AuthorID,
+    Bookmark,
+    JournalEntry,
+    WeatherJournal,
+)
 from weather_companion.weather_station import (
     Forecast,
     Location,
@@ -138,3 +142,10 @@ class WeatherCompanion:
     # Remove a bookmark for an author from the repository
     def remove_bookmark(self, bookmark: Bookmark, author: AuthorID):
         self._bookmark_repository.remove(bookmark=bookmark, author_id=author)
+
+    def get_current_weather_state_for_bookmark(self, bookmark: Bookmark, author: AuthorID) -> WeatherState:
+        """
+        Gets the current weather state for a bookmark
+        """
+        location = self._bookmark_repository.get(bookmark=bookmark, author_id=author)
+        return self.get_current_state(location=location)

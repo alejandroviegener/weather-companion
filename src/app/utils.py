@@ -58,6 +58,10 @@ def _get_weather_forecast(
     return weather_forecast
 
 
+def _serialize_weather_state(weather_state: ws.WeatherState) -> WeatherState:
+    return WeatherState(**weather_state.to_dict())
+
+
 def _serialize_weather_forecast(location: ws.Location, weather_forecast: ws.Forecast) -> Forecast:
     serialized_forecast = []
     for wf in weather_forecast:
@@ -227,3 +231,21 @@ def _add_bookmark(
         weather_companion._bookmark_repository.add(bookmark=bookmark, location=location, author_id=author_id)
     except repo.RepositoryError as e:
         raise fastapi.HTTPException(status_code=400, detail=str(e))
+
+
+def _delete_bookmark(weather_companion: system.WeatherCompanion, bookmark: Bookmark, author_id: wj.AuthorID):
+    try:
+        weather_companion._bookmark_repository.remove(bookmark=bookmark, author_id=author_id)
+    except repo.RepositoryError as e:
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
+
+
+def _get_current_weather_state_for_bookmark(
+    weather_companion: system.WeatherCompanion, bookmark: repo.Bookmark, author_id: wj.AuthorID
+) -> ws.WeatherState:
+    try:
+        location = weather_companion._bookmark_repository.get(bookmark=bookmark, author_id=author_id)
+        weather_state = weather_companion.get_current_state(location=location)
+    except repo.RepositoryError as e:
+        raise fastapi.HTTPException(status_code=400, detail=str(e))
+    return weather_state

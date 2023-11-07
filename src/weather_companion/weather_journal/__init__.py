@@ -1,4 +1,5 @@
 from .author import AuthorID
+from .bookmark import Bookmark
 from .filters import (
     AndFilter,
     DateRangeFilter,
