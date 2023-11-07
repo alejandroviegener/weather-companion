@@ -74,8 +74,8 @@ A brief description of the endpoints implemented by the system:
 
 **Note on Authentication**: the weather companion system uses an internal database with valid api_keys for user validation. For demonstration purpuses, on system start, the database is populated with 3 test users. These are the corresponding test APIKEYS:
 - 8fdce8a4-7d6b-11ee-b962-0242ac120001
-- 8fdce8a4-7d6b-11ee-b962-0242ac120001
-- 8fdce8a4-7d6b-11ee-b962-0242ac120001 
+- 8fdce8a4-7d6b-11ee-b962-0242ac120002
+- 8fdce8a4-7d6b-11ee-b962-0242ac120003 
 
 These api keys must be passed as query paramters, See API detailed documentation.
 
@@ -148,3 +148,4 @@ Tests are run automatically in the CI pipeline
 - Input checks in API
 - Coverage computation in CI pipeline
 - Database as a Docker Service and persistent database implementations
+- Add functionality to change the units system. Metric system for now
