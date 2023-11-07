@@ -8,4 +8,4 @@ from .filters import (
     NoteContentFilter,
 )
 from .note import Note
-from .weather_journal import JournalEntry, WeatherJournal
+from .weather_journal import JournalEntry

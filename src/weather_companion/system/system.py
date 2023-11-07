@@ -6,12 +6,7 @@ from weather_companion.repository import (
     LocationBookmarkRepository,
     RepositoryError,
 )
-from weather_companion.weather_journal import (
-    AuthorID,
-    Bookmark,
-    JournalEntry,
-    WeatherJournal,
-)
+from weather_companion.weather_journal import AuthorID, Bookmark, JournalEntry
 from weather_companion.weather_station import (
     Forecast,
     Location,
@@ -74,7 +69,7 @@ class WeatherCompanion:
     ############################################ Journal ####################################################
     #########################################################################################################
 
-    def add_journal_entry(self, journal_entry: WeatherJournal, author: AuthorID) -> int:
+    def add_journal_entry(self, journal_entry: JournalEntry, author: AuthorID) -> int:
         """
         Adds a new weather journal entry for an author into the repository
         Throws WeatherCompanionError if the journal entry cannot be added

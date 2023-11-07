@@ -3,12 +3,7 @@ from typing import List
 
 import pytest
 
-from weather_companion.weather_journal import (
-    AuthorID,
-    JournalEntry,
-    Note,
-    WeatherJournal,
-)
+from weather_companion.weather_journal import AuthorID, JournalEntry, Note
 from weather_companion.weather_journal.filters import (
     AndFilter,
     DateRangeFilter,
@@ -28,19 +23,16 @@ def journal() -> List[JournalEntry]:
     note_3 = Note(content="Test content 3")
 
     location_1 = Location(
-        label="TestLocation1",
         latitude=10.223,
         longitude=23.345,
     )
 
     location_2 = Location(
-        label="TestLocation2",
         latitude=14.223,
         longitude=21.345,
     )
 
     location_3 = Location(
-        label="TestLocation3",
         latitude=54.223,
         longitude=26.345,
     )
@@ -72,7 +64,6 @@ def test_should_return_filtered_entries_by_note_content(journal):
 
 def test_should_return_filtered_entries_of_and_filter(journal):
     location = Location(
-        label="TestLocation1",
         latitude=10.223,
         longitude=23.345,
     )
@@ -81,7 +72,6 @@ def test_should_return_filtered_entries_of_and_filter(journal):
     end_date = now + timedelta(days=1)
 
     location = Location(
-        label="TestLocation1",
         latitude=10.223,
         longitude=23.345,
     )
@@ -98,7 +88,6 @@ def test_should_return_filtered_entries_of_and_filter(journal):
 
 def test_should_return_filtered_entries_by_location_proximity(journal):
     location = Location(
-        label="TestLocation1",
         latitude=10.223,
         longitude=23.345,
     )

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     weather_station = OWMWeatherStation(client)
 
     # san nicolas, lat-34.6037&lon=-58.3816
-    location = Location(longitude=-58.3816, latitude=-34.6037, label="SanNicolas")
+    location = Location(longitude=-58.3816, latitude=-34.6037)
 
     current_state = weather_station.get_current_state(location)
     print("current state:")

@@ -29,7 +29,7 @@ class JournalEntry:
         return self._location == __value._location and self._date == __value._date and self._note == __value._note
 
 
-class WeatherJournal:
+class ___WeatherJournal___:
     """
     A weather journal is a collection of journal entries
     """

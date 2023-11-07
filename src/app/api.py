@@ -23,26 +23,11 @@ from .model import (
 from .user_repository import UserRepository
 
 
-def create_app(model_filepath: str) -> fastapi.FastAPI:
-    # Create app
+def create_app(weather_client_api_key: str) -> fastapi.FastAPI:
+    #  # Initialize System
     app = fastapi.FastAPI()
-
-    # Initialize weather station
-    weather_station_client = ws.OWMClient(api_key="cc803778f0556511257a09dc0789f825")
-    weather_station: ws.WeatherStation = ws.OWMWeatherStation(client=weather_station_client)
-
-    # Initialize weather companion
-    weather_companion: system.WeatherCompanion = system.WeatherCompanion(
-        weather_station=weather_station,
-        journal_repository=repo.InMemoryJournalRepository(),
-        bookmark_repository=repo.InMemoryLocationBookmarkRepository(),
-    )
-
-    # Initialize author repository and insert some test users
-    user_repository: UserRepository = UserRepository()
-    user_repository.add_user("test-user-1", "8fdce8a4-7d6b-11ee-b962-0242ac120001")
-    user_repository.add_user("test-user-2", "8fdce8a4-7d6b-11ee-b962-0242ac120002")
-    user_repository.add_user("test-user-3", "8fdce8a4-7d6b-11ee-b962-0242ac120003")
+    weather_companion: system.WeatherCompanion = _initialize_weather_companion_system(weather_client_api_key)
+    user_repository: UserRepository = _initialize_user_repository()
 
     ########################################## Health Check #####################################################
 
@@ -58,9 +43,9 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         status_code=200,
         response_model_exclude_none=True,
     )
-    async def get_current_weather_state(lat: float, long: float, label: str, apikey: str) -> WeatherState:
+    async def get_current_weather_state(lat: float, long: float, apikey: str) -> WeatherState:
         _ = utils._validate_user(user_repository=user_repository, apikey=apikey)
-        location: ws.Location = utils._deserialize_location(lat, long, label)
+        location: ws.Location = utils._deserialize_location(lat, long)
         weather_state: WeatherState = utils._get_current_weather_state(weather_companion, location)
         return weather_state
 
@@ -70,11 +55,9 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
         status_code=200,
         response_model_exclude_none=True,
     )
-    async def get_weather_forecast(
-        lat: float, long: float, label: str, start_date: date, end_date: date, apikey: str
-    ) -> Forecast:
+    async def get_weather_forecast(lat: float, long: float, start_date: date, end_date: date, apikey: str) -> Forecast:
         _ = utils._validate_user(user_repository=user_repository, apikey=apikey)
-        location: ws.Location = utils._deserialize_location(lat, long, label)
+        location: ws.Location = utils._deserialize_location(lat, long)
         weather_forecast: ws.Forecast = utils._get_weather_forecast(weather_companion, location, start_date, end_date)
         return utils._serialize_weather_forecast(location, weather_forecast)
 
@@ -176,7 +159,7 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
     async def add_bookmark(bookmark: Bookmark, apikey: str = Query(...)) -> Bookmark:
         author_id: wj.AuthorID = utils._get_author_for_key(user_repository=user_repository, apikey=apikey)
         deserialized_location: ws.Location = utils._deserialize_location(
-            lat=bookmark.location.latitude, long=bookmark.location.longitude, label="location"
+            lat=bookmark.location.latitude, long=bookmark.location.longitude
         )
         deserialized_bookmark: wj.Bookmark = utils._deserialize_bookmark(bookmark=bookmark)
         utils._add_bookmark(
@@ -220,9 +203,33 @@ def create_app(model_filepath: str) -> fastapi.FastAPI:
     return app
 
 
+def _initialize_weather_companion_system(weather_client_api_key: str):
+    weather_station_client = ws.OWMClient(api_key=weather_client_api_key)
+    weather_station: ws.WeatherStation = ws.OWMWeatherStation(client=weather_station_client)
+    weather_companion: system.WeatherCompanion = system.WeatherCompanion(
+        weather_station=weather_station,
+        journal_repository=repo.InMemoryJournalRepository(),
+        bookmark_repository=repo.InMemoryLocationBookmarkRepository(),
+    )
+
+    return weather_companion
+
+
+def _initialize_user_repository():
+    user_repository: UserRepository = UserRepository()
+    user_repository.add_user("test-user-1", "8fdce8a4-7d6b-11ee-b962-0242ac120001")
+    user_repository.add_user("test-user-2", "8fdce8a4-7d6b-11ee-b962-0242ac120002")
+    user_repository.add_user("test-user-3", "8fdce8a4-7d6b-11ee-b962-0242ac120003")
+    return user_repository
+
+
 # Read API key from environment variable
 import os
 
 # get filepath or use default
-model_filepath = os.getenv("MODEL_FILEPATH", "./tmp/delay_model.pkl")
-app = create_app(model_filepath)
+weather_client_api_key = os.getenv("WEATHER_CLIENT_API_KEY", None)
+if weather_client_api_key is None:
+    raise ValueError("WEATHER_CLIENT_API_KEY environment variable not set")
+
+print(weather_client_api_key)
+app = create_app(weather_client_api_key)

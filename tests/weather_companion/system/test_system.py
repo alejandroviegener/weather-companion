@@ -7,12 +7,7 @@ from weather_companion.repository import (
     InMemoryJournalRepository,
     InMemoryLocationBookmarkRepository,
 )
-from weather_companion.weather_journal import (
-    AuthorID,
-    JournalEntry,
-    Note,
-    WeatherJournal,
-)
+from weather_companion.weather_journal import AuthorID, JournalEntry, Note
 from weather_companion.weather_station import (
     Forecast,
     Location,
@@ -55,7 +50,7 @@ def test_should_get_current_weather_state():
     weather_companion = system.WeatherCompanion(
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
-    location = Location(latitude=10, longitude=20, label="test")
+    location = Location(latitude=10, longitude=20)
     result = weather_companion.get_current_state(location)
     assert result == state
 
@@ -68,7 +63,7 @@ def test_should_raise_exception_if_error_getting_current_weather_state():
     weather_companion = system.WeatherCompanion(
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
-    location = Location(latitude=10, longitude=20, label="test")
+    location = Location(latitude=10, longitude=20)
 
     with pytest.raises(system.WeatherCompanionError):
         weather_companion.get_current_state(location)
@@ -94,7 +89,7 @@ def test_should_get_forecast():
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
 
-    location = Location(latitude=10, longitude=20, label="test")
+    location = Location(latitude=10, longitude=20)
     result = weather_companion.get_forecast(location, start_date="2020-01-01", end_date="2020-01-02")
     assert result == forecast
 
@@ -107,7 +102,7 @@ def test_should_raise_exception_if_error_getting_forecast():
     weather_companion = system.WeatherCompanion(
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
-    location = Location(latitude=10, longitude=20, label="test")
+    location = Location(latitude=10, longitude=20)
 
     with pytest.raises(system.WeatherCompanionError):
         weather_companion.get_forecast(location, start_date="2020-01-01", end_date="2020-01-02")
@@ -121,7 +116,7 @@ def test_should_add_journal_entry():
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
     journal_entry = JournalEntry(
-        location=Location(latitude=10, longitude=20, label="test"),
+        location=Location(latitude=10, longitude=20),
         date="2020-01-01",
         note=Note("test note"),
     )
@@ -138,7 +133,7 @@ def test_should_get_journal_entry():
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
     journal_entry = JournalEntry(
-        location=Location(latitude=10, longitude=20, label="test"),
+        location=Location(latitude=10, longitude=20),
         date="2020-01-01",
         note=Note("test note"),
     )
@@ -156,7 +151,7 @@ def test_should_remove_existing_journal_entry():
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
     journal_entry = JournalEntry(
-        location=Location(latitude=10, longitude=20, label="test"),
+        location=Location(latitude=10, longitude=20),
         date="2020-01-01",
         note=Note("test note"),
     )
@@ -175,14 +170,14 @@ def test_should_update_existing_journal_entry():
         weather_station=weather_station, journal_repository=journal_repository, bookmark_repository=bookmark_repository
     )
     journal_entry = JournalEntry(
-        location=Location(latitude=10, longitude=20, label="test"),
+        location=Location(latitude=10, longitude=20),
         date="2020-01-01",
         note=Note("test note"),
     )
     author = AuthorID("test")
     id = weather_companion.add_journal_entry(journal_entry, author)
     new_journal_entry = JournalEntry(
-        location=Location(latitude=10, longitude=20, label="test"),
+        location=Location(latitude=10, longitude=20),
         date="2020-01-01",
         note=Note("test note 2"),
     )

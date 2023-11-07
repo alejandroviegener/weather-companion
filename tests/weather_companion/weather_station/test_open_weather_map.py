@@ -43,16 +43,8 @@ def test_get_current_state_response_should_include_mandatory_data():
     }
     client.set_current_state_response({"main": complete_data})
 
-    location = Location(51.5074, 0.1278, "London")
+    location = Location(51.5074, 0.1278)
     weather_state = weather_station.get_current_state(location)
-    expected_response = {
-        "weather_data": {
-            "temperature": 23,
-            "humidity": 40,
-            "feels_like": 21,
-            "pressure": 1042,
-        }
-    }
     assert weather_state.temperature == 23
     assert weather_state.humidity == 40
     assert weather_state.feels_like == 21
@@ -83,7 +75,7 @@ def test_get_current_state_response_should_include_all_optional_data_if_present(
         },
     }
     client.set_current_state_response(complete_mandatory_and_optional_data)
-    weather_state = weather_station.get_current_state(Location(51.5074, 0.1278, "London"))
+    weather_state = weather_station.get_current_state(Location(51.5074, 0.1278))
     assert weather_state.temperature == 23
     assert weather_state.humidity == 40
     assert weather_state.feels_like == 21
@@ -106,12 +98,12 @@ def test_get_current_state_should_fail_if_unexpected_weather_data_format_in_clie
     weather_station = OWMWeatherStation(client=client)
 
     client.set_current_state_response({"main": {}})
-    location = Location(51.5074, 0.1278, "London")
+    location = Location(51.5074, 0.1278)
     with pytest.raises(WeatherStationError) as e:
         weather_station.get_current_state(location)
 
     client.set_current_state_response({})
-    location = Location(51.5074, 0.1278, "London")
+    location = Location(51.5074, 0.1278)
     with pytest.raises(WeatherStationError):
         weather_station.get_current_state(location)
 
@@ -121,7 +113,7 @@ def test_get_current_state_should_fail_if_error_raised_by_client():
     weather_station = OWMWeatherStation(client=client)
 
     client.set_current_state_response(None, ClientError("some error message"))
-    location = Location(51.5074, 0.1278, "London")
+    location = Location(51.5074, 0.1278)
     with pytest.raises(WeatherStationError) as e:
         weather_station.get_current_state(location)
     assert str(e.value).startswith("Client error:")
@@ -141,7 +133,7 @@ def test_get_current_state_should_fail_if_mandatory_data_missing():
         incomplete_data = complete_data.copy()
         del incomplete_data[field]
         client.set_current_state_response({"main": incomplete_data})
-        location = Location(51.5074, 0.1278, "London")
+        location = Location(51.5074, 0.1278)
         with pytest.raises(WeatherStationError) as e:
             weather_station.get_current_state(location)
 
