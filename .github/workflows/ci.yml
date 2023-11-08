@@ -1,0 +1,41 @@
+
+
+
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: 
+      - main
+      - develop
+
+jobs:
+  build_and_run:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Build using Docker Compose
+    - name: Build and start containers with Docker Compose
+      run: |
+        docker-compose -f environments/test/docker-compose.yml build
+
+    # Service up
+    - name: Start services
+      run: |
+        docker-compose -f environments/test/docker-compose.yml up -d
+
+    # Execute code quality checks
+    - name: Execute code quality checks
+      run: docker-compose -f environments/test/docker-compose.yml exec -T weather-companion make code-quality 
+
+    # Execute the test command
+    - name: Execute tests 
+      run: docker-compose -f environments/test/docker-compose.yml exec -T weather-companion make test
+
+    # Service down
+    - name: Stop services
+      run: |
+        docker-compose -f environments/test/docker-compose.yml down
