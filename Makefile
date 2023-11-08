@@ -21,7 +21,7 @@ format:
 # run api
 api-run:
 	@echo "Running api..."
-	poetry run uvicorn src.app.api:app --port 8000
+	poetry run uvicorn src.app.api:app --port 8000 --reload
 
 # Add additional targets as needed...
 

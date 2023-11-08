@@ -1,4 +1,5 @@
 from .author import AuthorID
+from .bookmark import Bookmark
 from .filters import (
     AndFilter,
     DateRangeFilter,
@@ -7,4 +8,4 @@ from .filters import (
     NoteContentFilter,
 )
 from .note import Note
-from .weather_journal import JournalEntry, WeatherJournal
+from .weather_journal import JournalEntry

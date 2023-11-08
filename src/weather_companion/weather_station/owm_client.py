@@ -18,7 +18,10 @@ class OWMClient:
         """
         Gets the current weather state for a given location.
         """
-        endpoint = self._base_url + f"/weather?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
+        endpoint = (
+            self._base_url
+            + f"/weather?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}&units=metric"
+        )
         response = self._request(endpoint)
         return response.json()
 
@@ -26,7 +29,10 @@ class OWMClient:
         """
         Gets the weather forecast for a location, given a start and end date.
         """
-        endpoint = self._base_url + f"/forecast?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}"
+        endpoint = (
+            self._base_url
+            + f"/forecast?lat={location.latitude}&lon={location.longitude}&appid={self._api_key}&units=metric"
+        )
         response = self._request(endpoint)
         return response.json()
 
